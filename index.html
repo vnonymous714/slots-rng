@@ -715,7 +715,7 @@ Player 6</textarea>
   <filter id="mb5"><feGaussianBlur stdDeviation="0 12"/></filter>
 </svg>
 
-<script src="config.js?v=202610090133"></script>
+<script src="config.js?v=202610090146"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -2086,6 +2086,11 @@ window.__slots = { spin, setMode, randInt, slot:Slots, engine:E,
   $("#authDemoNote").textContent = Backend.kind === "demo" ? "Demo mode: no real accounts. This makes a pretend player stored only in this browser." : "We only use your name and email to keep your credit balance.";
   syncMute(); updateNameCount(false); Bg.reset(); renderHistory();
   try { await Backend.init(); } catch(e){ console.warn("backend init failed", e); }
+  // DEMO ONLY: ?resetbal=20 sets the local test balance to 20.00 (2000 stored), clears free spins + locked aces, then drops the param.
+  if (Backend.kind === "demo"){ try { const u = new URL(location.href), v = u.searchParams.get("resetbal");
+    if (v != null){ const n = Number(v);
+      if (Backend.s && Number.isFinite(n) && n >= 0 && n <= 1e7){ Backend.s.balance = Math.round(n*100); Backend.s.fs = {left:0, lineBet:1, total:0, awarded:0, locked:0}; Backend.save(); }
+      u.searchParams.delete("resetbal"); history.replaceState(null, "", u.pathname + u.search + u.hash); } } catch(e){} }
   App.refresh(false); Sign.set(Backend.sign); Aces.set(Backend.fs.left > 0 ? Backend.fs.locked | 0 : 0); Jackpots.show(Backend.jackpotPool, Slots.totalBet()); Slots.size(true);
   // live mode: the global MEGA pool grows from everyone's bets; refresh it now and then while visible and idle
   if (Backend.kind === "live") setInterval(async () => { if (document.hidden || Slots.busy()) return; const before = Backend.jackpotPool; await Backend.loadJackpot(); if (Backend.jackpotPool !== before && Backend.jackpotPool > (Jackpots.pool || 0)) Jackpots.show(Backend.jackpotPool, null, 1200); }, 20000);
