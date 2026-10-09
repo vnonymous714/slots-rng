@@ -1,0 +1,980 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2a0050">
+<title>SLOTS · Random Number Generator</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<style>
+:root{--cellH:clamp(62px,16vw,104px);--gold:#ffcf4a;--pink:#ff2bd6;--cyan:#21f3ff;--violet:#7b2cff;--chase:1.8s}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#fff;overflow-x:hidden;
+  background:#16002e;background-image:linear-gradient(125deg,#2a0050,#6a0a7a,#0b1a6b,#00365e,#5a0048,#2a0050);
+  background-size:400% 400%;animation:bgshift 22s ease infinite}
+@keyframes bgshift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+#bg,#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+#bg{z-index:0}#fx{z-index:70}
+.floor{position:fixed;left:-60%;right:-60%;bottom:0;height:46vh;z-index:0;pointer-events:none;transform-origin:50% 100%;
+  transform:perspective(320px) rotateX(62deg);
+  background-image:linear-gradient(rgba(255,43,214,.6) 2px,transparent 2px),linear-gradient(90deg,rgba(33,243,255,.45) 2px,transparent 2px);
+  background-size:64px 64px;animation:floor 2.4s linear infinite;
+  -webkit-mask-image:linear-gradient(to top,#000 5%,transparent 92%);mask-image:linear-gradient(to top,#000 5%,transparent 92%)}
+@keyframes floor{to{background-position:0 64px}}
+#flash{position:fixed;inset:0;z-index:65;pointer-events:none;background:#fff;opacity:0}
+#flash.go{animation:flash .45s ease-out}
+#flash.rainbow{animation:flashR 1.4s ease-out}
+@keyframes flash{0%{opacity:.75}100%{opacity:0}}
+@keyframes flashR{0%{opacity:.8;background:#fff}15%{opacity:.6;background:#ff2bd6}30%{opacity:.55;background:#ffcf4a}45%{opacity:.5;background:#21f3ff}65%{opacity:.35;background:#fff}100%{opacity:0}}
+.stage{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;padding:12px 10px 40px;min-height:100vh}
+.topnav{width:min(640px,100%);display:flex;align-items:center;gap:8px;justify-content:space-between;flex-wrap:wrap}
+.acct{display:flex;align-items:center;gap:8px;min-width:0}
+.avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-weight:900;background:linear-gradient(135deg,var(--pink),var(--violet));box-shadow:0 0 12px rgba(255,43,214,.6);flex:none}
+.acct .who{font-size:13px;line-height:1.1;min-width:0;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acct .who small{display:block;opacity:.6;font-size:11px}
+.pill{border:0;border-radius:999px;padding:8px 14px;font:800 13px/1 system-ui,sans-serif;color:#fff;cursor:pointer;letter-spacing:.04em;background:rgba(255,255,255,.1);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25);transition:transform .15s,background .2s}
+.pill:hover{background:rgba(255,255,255,.2)}.pill:active{transform:scale(.95)}
+.pill.gold{background:linear-gradient(180deg,#ffe58a,#f5a300);color:#4a2400;box-shadow:0 0 16px rgba(255,190,0,.6),inset 0 -2px 0 rgba(0,0,0,.2)}
+.pill.bonus{background:linear-gradient(180deg,#7bff9a,#00b35a);color:#00331a;animation:bonusPulse 1.4s ease-in-out infinite}
+@keyframes bonusPulse{50%{box-shadow:0 0 22px #3dff8a,inset 0 -2px 0 rgba(0,0,0,.2);transform:scale(1.05)}}
+.wallet{display:flex;align-items:center;gap:6px}
+.balance{display:flex;align-items:center;gap:6px;padding:5px 12px 5px 6px;border-radius:999px;background:rgba(0,0,0,.45);box-shadow:inset 0 0 0 2px rgba(255,207,74,.6),0 0 18px rgba(255,207,74,.25);font:900 16px/1 ui-monospace,Menlo,Consolas,monospace;color:var(--gold);font-variant-numeric:tabular-nums;min-width:96px}
+.balance.bump{animation:bump .5s cubic-bezier(.3,1.8,.5,1)}
+.balance.drain{animation:drain .4s ease}
+@keyframes bump{40%{transform:scale(1.18);box-shadow:inset 0 0 0 2px #fff,0 0 30px #ffcf4a}}
+@keyframes drain{30%{transform:translateY(2px);color:#ff7a9a}}
+.coinIcon{width:22px;height:22px;border-radius:50%;flex:none;background:radial-gradient(circle at 35% 30%,#fff6c0,#ffcf4a 40%,#c98a00 75%,#8a5a00);box-shadow:inset 0 0 0 2px #b77b00;display:grid;place-items:center;color:#7a4a00;font:900 12px/1 system-ui;animation:coinSpin 4s linear infinite}
+@keyframes coinSpin{0%,80%{transform:rotateY(0)}100%{transform:rotateY(360deg)}}
+.demoTag{font:800 10px/1 system-ui;letter-spacing:.12em;padding:4px 7px;border-radius:6px;background:#21f3ff;color:#002a33}
+.sign{text-align:center;margin:10px 0 4px;user-select:none}
+.neon{margin:0;font:900 clamp(46px,13vw,92px)/.9 "Arial Black",Impact,system-ui,sans-serif;letter-spacing:.06em;color:#fff5fd;text-shadow:0 0 4px #fff,0 0 12px #ff2bd6,0 0 28px #ff2bd6,0 0 60px #ff2bd6,0 0 90px #b100ff;animation:flicker 6s infinite}
+.neon span{font-size:.32em;letter-spacing:.3em;vertical-align:super;color:#e9ffff;text-shadow:0 0 4px #fff,0 0 12px #21f3ff,0 0 30px #21f3ff,0 0 60px #0077ff;margin-left:.2em}
+@keyframes flicker{0%,18%,22%,25%,53%,57%,100%{opacity:1}20%,24%,55%{opacity:.55}}
+.sub{font:700 12px/1.4 system-ui;letter-spacing:.35em;text-transform:uppercase;color:#bff8ff;text-shadow:0 0 8px #21f3ff;opacity:.85}
+.machine{position:relative;width:min(600px,calc(100vw - 70px));margin:14px auto 0;padding:26px;border-radius:34px;background:linear-gradient(160deg,#ff3d6e,#b0007f 38%,#4b0a8c 100%);
+  box-shadow:0 0 0 4px #ffd36b,0 0 0 9px #7a3b00,0 0 0 12px #ffcf4a,0 30px 80px rgba(0,0,0,.6),0 0 90px rgba(255,43,214,.45)}
+.machine::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.22) 45%,transparent 60%);background-size:250% 100%;animation:sheen 6s ease-in-out infinite}
+@keyframes sheen{0%{background-position:150% 0}60%,100%{background-position:-60% 0}}
+.machine.spinning{--chase:.55s}
+.machine.jackpot{--chase:.28s}
+.machine.shake{animation:shake .5s cubic-bezier(.36,.07,.19,.97)}
+.machine.quake{animation:quake .9s cubic-bezier(.36,.07,.19,.97)}
+@keyframes shake{10%,90%{transform:translate(-1px,0)}20%,80%{transform:translate(3px,-1px) rotate(.4deg)}30%,50%,70%{transform:translate(-5px,1px) rotate(-.6deg)}40%,60%{transform:translate(5px,0) rotate(.6deg)}}
+@keyframes quake{0%,100%{transform:none}10%{transform:translate(-8px,4px) rotate(-1.5deg) scale(1.02)}20%{transform:translate(9px,-5px) rotate(1.5deg)}30%{transform:translate(-9px,3px) rotate(-1deg) scale(1.03)}40%{transform:translate(8px,-2px) rotate(1deg)}50%{transform:translate(-6px,4px)}60%{transform:translate(5px,-3px) scale(1.02)}70%{transform:translate(-3px,2px)}85%{transform:translate(2px,-1px)}}
+.bulbs{position:absolute;inset:0;pointer-events:none;z-index:1}
+.machine.jackpot .bulbs{animation:hue .45s linear infinite}
+@keyframes hue{to{filter:hue-rotate(360deg)}}
+.bulb{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:#6b4a10;box-shadow:inset 0 -2px 3px rgba(0,0,0,.5);animation:chase var(--chase) linear infinite;animation-delay:calc(var(--f) * var(--chase) * -1)}
+@keyframes chase{0%{background:#fffbe0;box-shadow:0 0 6px 2px #fff3a0,0 0 20px 7px #ffb300}18%{background:#ffcf4a;box-shadow:0 0 5px 1px #ffb300}36%,100%{background:#6b4a10;box-shadow:inset 0 -2px 3px rgba(0,0,0,.5)}}
+.cabinet{position:relative;z-index:2;border-radius:22px;padding:16px;background:linear-gradient(180deg,#1d0740,#0c0220);box-shadow:inset 0 0 0 2px rgba(255,255,255,.08),inset 0 10px 40px rgba(0,0,0,.7)}
+.modes{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:12px}
+.modes button{flex:1 1 0;min-width:64px;border:0;border-radius:12px;padding:9px 6px;cursor:pointer;font:900 12px/1 system-ui,sans-serif;letter-spacing:.12em;color:#d9c8ff;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);transition:all .2s}
+.modes button .ic{display:block;font-size:18px;margin-bottom:4px;letter-spacing:0}
+.modes button[aria-selected=true]{color:#1a0033;background:linear-gradient(180deg,#9ff9ff,#21f3ff);box-shadow:0 0 18px rgba(33,243,255,.7)}
+.modes button:disabled{opacity:.5;cursor:not-allowed}
+.window{position:relative;height:calc(var(--cellH) * 1.72);border-radius:16px;padding:0 8px;overflow:hidden;background:linear-gradient(#2a1600,#6b4300 50%,#2a1600);box-shadow:inset 0 0 0 3px var(--gold),inset 0 0 22px #000,0 0 30px rgba(255,207,74,.3)}
+.reels{display:flex;justify-content:center;gap:6px;height:100%;padding:8px 0}
+.reel{position:relative;flex:1 1 0;min-width:0;max-width:96px;overflow:hidden;border-radius:8px;background:linear-gradient(90deg,#cfc6b2,#fffdf4 28%,#fffdf4 72%,#c9c0ab)}
+.reel.wide{max-width:none}
+.reel.sign{max-width:60px}
+.strip{position:absolute;inset:0;will-change:filter}
+.reel::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(rgba(10,0,20,.72),rgba(0,0,0,0) 32%,rgba(0,0,0,0) 68%,rgba(10,0,20,.72))}
+.cell{position:absolute;left:0;right:0;top:0;height:var(--cellH);display:flex;align-items:center;justify-content:center;will-change:transform;font-family:Impact,"Arial Black","Helvetica Neue",Arial,sans-serif;font-weight:900;color:#c3002f;text-shadow:0 2px 0 #fff,0 4px 0 #7a001c;line-height:1}
+.cell .seven{color:#e0001b;text-shadow:0 2px 0 #ffe9a0,0 4px 0 #9a5a00,0 0 18px rgba(255,190,0,.9)}
+.reel.dim .cell{opacity:.22}
+.reel.landed{animation:land .7s ease-out}
+@keyframes land{0%{box-shadow:inset 0 0 0 5px #fff,0 0 30px #ffcf4a;filter:brightness(1.5)}100%{box-shadow:inset 0 0 0 0 transparent;filter:none}}
+.reel.tension{animation:tension .22s ease-in-out infinite alternate}
+@keyframes tension{from{box-shadow:inset 0 0 0 3px #ff2b55,0 0 14px #ff2b55}to{box-shadow:inset 0 0 0 4px #ffcf4a,0 0 28px #ffcf4a}}
+.name{font-family:system-ui,"Segoe UI",Roboto,sans-serif;font-weight:900;color:#3a0066;text-shadow:0 2px 0 #fff,0 3px 0 #b48cff;max-width:92%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 6px}
+.coinFace{display:flex;align-items:center;gap:.25em;font-family:system-ui,sans-serif}
+.coinFace .disc{width:.62em;height:.62em;border-radius:50%;display:grid;place-items:center;font-size:1em;color:#7a4a00;text-shadow:0 1px 0 #fff3b0;background:radial-gradient(circle at 35% 30%,#fff7c8,#ffd34d 38%,#d39200 72%,#8a5a00);box-shadow:inset 0 0 0 .04em #a86f00,0 .04em .08em rgba(0,0,0,.4)}
+.coinFace .disc b{font-size:.36em}
+.coinFace.t .disc{background:radial-gradient(circle at 35% 30%,#ffffff,#d9e2ef 38%,#8f9cb3 72%,#4f5a70);color:#2a3550;box-shadow:inset 0 0 0 .04em #6b7891,0 .04em .08em rgba(0,0,0,.4);text-shadow:0 1px 0 #fff}
+.coinFace .lbl{font-size:.3em;color:#3a0066;text-shadow:0 2px 0 #fff;letter-spacing:.05em}
+.die{width:.66em;height:.66em;border-radius:.12em;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:.08em;gap:.02em;background:linear-gradient(145deg,#ff4b6b,#c3002f);box-shadow:inset 0 -.04em 0 rgba(0,0,0,.3),inset 0 .03em 0 rgba(255,255,255,.4),0 .04em .08em rgba(0,0,0,.35)}
+.die i{border-radius:50%;margin:12%;background:transparent}
+.die i.on{background:radial-gradient(circle at 40% 35%,#fff,#e9e9e9)}
+.payline{position:absolute;left:4px;right:4px;top:50%;height:3px;margin-top:-1.5px;z-index:3;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(255,30,80,.85) 8%,rgba(255,30,80,.85) 92%,transparent);box-shadow:0 0 10px #ff1e50;opacity:.75}
+.payline::before,.payline::after{content:"";position:absolute;top:50%;margin-top:-9px;border:9px solid transparent}
+.payline::before{left:-4px;border-left-color:var(--gold)}.payline::after{right:-4px;border-right-color:var(--gold)}
+.readout{margin:14px auto 0;border-radius:14px;padding:10px 14px;text-align:center;background:#05010d;box-shadow:inset 0 0 0 2px #2b1752,inset 0 0 24px rgba(33,243,255,.15)}
+.readout .label{display:block;font:800 11px/1 system-ui;letter-spacing:.3em;color:#8fa;opacity:.75;text-transform:uppercase}
+.readout .value{display:block;margin-top:6px;font:900 clamp(28px,8vw,46px)/1.05 ui-monospace,Menlo,Consolas,monospace;color:#bdfcff;text-shadow:0 0 6px #21f3ff,0 0 18px #21f3ff;min-height:1.05em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums}
+.readout .value.pop{animation:pop .6s cubic-bezier(.2,1.8,.4,1)}
+.readout.jack .value{color:#fff3b0;text-shadow:0 0 6px #ffcf4a,0 0 24px #ff9900,0 0 40px #ff2bd6}
+@keyframes pop{0%{transform:scale(.3);opacity:0;filter:blur(4px)}60%{transform:scale(1.25);opacity:1;filter:none}100%{transform:scale(1)}}
+.controls{margin-top:14px}
+.panel{display:none}.panel.on{display:block;animation:fadeUp .35s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.range{display:flex;gap:10px;align-items:end;justify-content:center}
+.field{display:flex;flex-direction:column;gap:4px;flex:1;max-width:180px}
+.field label,.lbl2{font:800 11px/1 system-ui;letter-spacing:.2em;color:#d9c8ff;text-transform:uppercase}
+input[type=number],textarea,select{width:100%;border:0;border-radius:10px;padding:10px 12px;font:800 18px/1.2 ui-monospace,Menlo,Consolas,monospace;color:#fff;background:#140630;box-shadow:inset 0 0 0 2px #3d1f7a;outline:none;transition:box-shadow .2s}
+input[type=number]:focus,textarea:focus,select:focus{box-shadow:inset 0 0 0 2px var(--cyan),0 0 14px rgba(33,243,255,.4)}
+textarea{font:600 15px/1.35 system-ui,sans-serif;min-height:96px;resize:vertical;margin-top:6px}
+.dash{font:900 22px/1 system-ui;color:#ff8bea;padding-bottom:10px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;flex-wrap:wrap;font-size:13px;color:#d9c8ff}
+.row label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.note{font-size:13px;color:#d9c8ff;text-align:center;opacity:.85;margin:4px 0}
+.msg{min-height:18px;text-align:center;margin-top:8px;font:700 13px/1.3 system-ui;color:#ff9ab8}
+.msg.shake{animation:shake .4s}
+.spinWrap{display:flex;flex-direction:column;align-items:center;margin-top:12px}
+.spin{position:relative;border:0;cursor:pointer;width:min(320px,100%);padding:16px 10px 14px;border-radius:999px;font:900 clamp(26px,7vw,36px)/1 "Arial Black",Impact,system-ui,sans-serif;letter-spacing:.14em;color:#fff;background:radial-gradient(circle at 50% 20%,#ff8aa8,#ff1f4b 45%,#b0002a);text-shadow:0 2px 0 #7a001c,0 0 12px rgba(255,255,255,.6);
+  box-shadow:0 8px 0 #6b0019,0 12px 24px rgba(0,0,0,.5),0 0 0 4px #ffcf4a,0 0 40px rgba(255,43,85,.8);animation:breathe 1.8s ease-in-out infinite;transition:transform .08s}
+.spin small{display:block;font:800 12px/1 system-ui;letter-spacing:.25em;margin-top:6px;opacity:.9;text-shadow:none}
+.spin:active,.spin.pressed{transform:translateY(6px);box-shadow:0 2px 0 #6b0019,0 4px 10px rgba(0,0,0,.5),0 0 0 4px #ffcf4a,0 0 60px rgba(255,43,85,1)}
+.spin:disabled{cursor:default;animation:none;filter:saturate(.6) brightness(.85)}
+@keyframes breathe{50%{box-shadow:0 8px 0 #6b0019,0 12px 24px rgba(0,0,0,.5),0 0 0 4px #fff3b0,0 0 70px rgba(255,43,85,1),0 0 110px rgba(255,43,214,.6)}}
+.hint{margin-top:8px;font:700 11px/1 system-ui;letter-spacing:.25em;color:#bfa8ff;opacity:.75;text-transform:uppercase}
+.kbd{display:inline-block;padding:2px 6px;border-radius:5px;background:rgba(255,255,255,.12);box-shadow:inset 0 -2px 0 rgba(0,0,0,.3)}
+.lever{position:absolute;z-index:3;right:-46px;top:calc(50% - 30px);width:40px;height:40px;cursor:pointer;--L:120px}
+.lever .slot{position:absolute;left:8px;top:-6px;width:24px;height:52px;border-radius:12px;background:linear-gradient(90deg,#333,#777 50%,#333);box-shadow:inset 0 0 6px #000}
+.lever .arm{position:absolute;left:15px;bottom:20px;width:10px;height:var(--L);border-radius:5px;transform-origin:50% 100%;background:linear-gradient(90deg,#8a8a8a,#f5f5f5 45%,#9a9a9a)}
+.lever .ball{position:absolute;left:1px;top:calc(20px - var(--L) - 19px);width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#ff5a7a 25%,#d0002a 60%,#6b0015);box-shadow:0 0 18px rgba(255,40,90,.8)}
+.lever .hub{position:absolute;left:4px;top:4px;width:32px;height:32px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#aaa 50%,#444);box-shadow:0 2px 6px rgba(0,0,0,.6)}
+.lever.pull .arm{animation:pullArm .62s cubic-bezier(.5,0,.4,1)}
+.lever.pull .ball{animation:pullBall .62s cubic-bezier(.5,0,.4,1)}
+@keyframes pullArm{45%{transform:scaleY(-.55)}100%{transform:scaleY(1)}}
+@keyframes pullBall{45%{transform:translateY(calc(var(--L) * 1.55)) scale(1.25)}100%{transform:none}}
+.history{width:min(640px,100%);margin-top:26px;text-align:center}
+.history h2{margin:0 0 10px;font:900 13px/1 system-ui;letter-spacing:.4em;color:#ffcf4a;text-shadow:0 0 10px rgba(255,207,74,.7)}
+.history h2 button{margin-left:8px;font-size:10px;padding:4px 8px;vertical-align:middle}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;min-height:42px}
+.chip{display:flex;align-items:center;gap:6px;max-width:170px;padding:7px 12px 7px 7px;border-radius:999px;font:900 15px/1 ui-monospace,Menlo,Consolas,monospace;color:#fff;background:linear-gradient(180deg,rgba(123,44,255,.9),rgba(70,10,140,.9));box-shadow:0 0 0 2px rgba(255,255,255,.18),0 4px 14px rgba(0,0,0,.4);animation:bob 3.2s ease-in-out infinite;animation-delay:calc(var(--i) * -.37s)}
+.chip b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip i{font-style:normal;flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font:900 10px/1 system-ui;background:#21f3ff;color:#012}
+.chip.m-list i{background:#ff8bea}.chip.m-coin i{background:#ffcf4a}.chip.m-dice i{background:#7bff9a}
+.chip.jackpot{background:linear-gradient(110deg,#ffcf4a,#fff3b0 30%,#ff9900 50%,#ffcf4a 70%,#fff3b0);background-size:250% 100%;color:#5a2a00;animation:bob 3.2s ease-in-out infinite,shimmer 1.6s linear infinite;box-shadow:0 0 0 2px #fff3b0,0 0 18px #ffb300}
+.chip.big{background:linear-gradient(180deg,#ff2bd6,#9b00a8)}
+.chip.new{animation:chipIn .7s cubic-bezier(.2,1.6,.4,1),bob 3.2s ease-in-out .7s infinite}
+.chip.jackpot.new{animation:chipIn .7s cubic-bezier(.2,1.6,.4,1),bob 3.2s ease-in-out .7s infinite,shimmer 1.6s linear infinite}
+@keyframes chipIn{0%{transform:translateY(-40px) scale(.2) rotate(-30deg);opacity:0}100%{transform:none;opacity:1}}
+@keyframes bob{50%{transform:translateY(-4px)}}
+@keyframes shimmer{to{background-position:-250% 0}}
+.empty{opacity:.6;font-size:13px;padding:10px}
+.foot{margin-top:24px;font-size:11px;letter-spacing:.12em;opacity:.55;text-align:center;line-height:1.6;max-width:560px}
+#banner{position:fixed;left:0;right:0;top:38%;z-index:75;text-align:center;pointer-events:none;opacity:0;font:900 clamp(44px,13vw,130px)/1 "Arial Black",Impact,system-ui,sans-serif;letter-spacing:.04em;white-space:nowrap}
+#banner small{display:block;font:900 clamp(14px,3.6vw,26px)/1.3 system-ui;letter-spacing:.3em;margin-top:8px;color:#fff;text-shadow:0 0 10px #ff2bd6}
+#banner.show{opacity:1}
+#banner .ch{display:inline-block;animation:letter .7s cubic-bezier(.2,1.8,.4,1) both,wiggle 1.1s ease-in-out .7s infinite;animation-delay:calc(var(--i) * 55ms),calc(var(--i) * 55ms + .7s)}
+#banner.big .ch{color:#fff;text-shadow:0 0 6px #fff,0 0 20px #ff2bd6,0 0 50px #ff2bd6,0 6px 0 #6b0080}
+#banner.jackpot .ch{background:linear-gradient(90deg,#fff3b0,#ffcf4a,#ff7a00,#ff2bd6,#21f3ff,#fff3b0);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 10px rgba(255,200,0,.9)) drop-shadow(0 5px 0 #7a3b00);animation:letter .7s cubic-bezier(.2,1.8,.4,1) both,wiggle 1.1s ease-in-out .7s infinite,shimmer 1.2s linear infinite}
+@keyframes letter{0%{transform:translateY(-120px) scale(.2) rotate(-40deg);opacity:0}100%{transform:none;opacity:1}}
+@keyframes wiggle{25%{transform:translateY(-8px) rotate(-4deg)}75%{transform:translateY(4px) rotate(4deg)}}
+#banner.out{opacity:0;transition:opacity .5s}
+.modal{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(8,0,20,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.modal.open{display:flex;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0}}
+.sheet{position:relative;width:min(460px,100%);max-height:92vh;overflow:auto;border-radius:24px;padding:22px 18px 18px;background:linear-gradient(180deg,#2a0b55,#12042a);box-shadow:0 0 0 3px var(--gold),0 0 60px rgba(255,43,214,.5),0 30px 80px rgba(0,0,0,.6);animation:sheetIn .45s cubic-bezier(.2,1.5,.4,1)}
+@keyframes sheetIn{from{transform:translateY(40px) scale(.9);opacity:0}}
+.sheet h3{margin:0 0 4px;text-align:center;font:900 26px/1.1 "Arial Black",Impact,system-ui;letter-spacing:.06em;color:#fff3b0;text-shadow:0 0 14px rgba(255,190,0,.8)}
+.sheet .x{position:absolute;right:12px;top:10px;border:0;background:none;color:#fff;font-size:26px;cursor:pointer;opacity:.7;line-height:1}
+.sheet p{margin:6px 0;text-align:center;color:#e6dcff;font-size:14px;line-height:1.4}
+.oauth{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:10px;border:0;border-radius:12px;padding:13px;font:700 16px/1 system-ui,-apple-system,sans-serif;cursor:pointer;transition:transform .1s}
+.oauth:active{transform:scale(.97)}
+.oauth.google{background:#fff;color:#1f1f1f}
+.oauth.apple{background:#000;color:#fff;box-shadow:inset 0 0 0 1px #444}
+.oauth svg{width:20px;height:20px;flex:none}
+.packs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.pack{position:relative;border:0;border-radius:16px;padding:16px 8px 12px;cursor:pointer;color:#fff;text-align:center;background:linear-gradient(180deg,#3b1580,#1e0848);box-shadow:inset 0 0 0 2px rgba(255,207,74,.45);transition:transform .15s,box-shadow .2s}
+.pack:hover{transform:translateY(-3px);box-shadow:inset 0 0 0 2px #ffcf4a,0 0 22px rgba(255,207,74,.5)}
+.pack .stack{display:flex;justify-content:center;margin-bottom:6px;padding-left:8px}
+.pack .stack .coinIcon{margin-left:-8px;animation:none}
+.pack .amt{font:900 22px/1 ui-monospace,Menlo,monospace;color:#ffcf4a}
+.pack .amt small{font-size:11px;letter-spacing:.15em;color:#e6dcff}
+.pack .price{display:inline-block;margin-top:8px;padding:6px 14px;border-radius:999px;background:linear-gradient(180deg,#7bff9a,#00b35a);color:#00331a;font:900 15px/1 system-ui}
+.pack .tag{position:absolute;top:-8px;left:50%;transform:translateX(-50%);padding:3px 8px;border-radius:999px;font:900 10px/1 system-ui;letter-spacing:.1em;background:var(--pink);color:#fff;white-space:nowrap;box-shadow:0 0 10px var(--pink)}
+.legal{margin-top:14px;padding:10px 12px;border-radius:12px;background:rgba(255,207,74,.1);box-shadow:inset 0 0 0 1px rgba(255,207,74,.4);font-size:12px;line-height:1.45;color:#fff3c8;text-align:center}
+.legal b{color:#ffcf4a}
+.fakepay{margin-top:12px;border-radius:14px;background:#fff;color:#1a1a2e;padding:16px;text-align:left}
+.fakepay .tm{display:inline-block;font:800 10px/1 system-ui;letter-spacing:.12em;background:#ffde92;color:#6b4a00;padding:4px 6px;border-radius:4px}
+.fakepay .ln{display:flex;justify-content:space-between;margin:10px 0;font:600 15px/1.2 system-ui}
+.fakepay .card{border:1px solid #d5d8e0;border-radius:8px;padding:10px;font:500 14px/1 ui-monospace,monospace;color:#555;margin:8px 0}
+.fakepay button{width:100%;border:0;border-radius:8px;padding:12px;font:700 16px/1 system-ui;color:#fff;background:#635bff;cursor:pointer}
+.fakepay button:disabled{opacity:.6}
+.toast{position:fixed;left:50%;bottom:22px;z-index:90;transform:translate(-50%,140px);padding:12px 18px;border-radius:14px;background:#12042a;color:#fff;font:700 14px/1.3 system-ui;box-shadow:0 0 0 2px var(--cyan),0 10px 30px rgba(0,0,0,.5);transition:transform .4s cubic-bezier(.2,1.4,.4,1);max-width:92vw;text-align:center}
+.toast.show{transform:translate(-50%,0)}
+@media (max-width:560px){
+  .machine{padding:16px;border-radius:26px;width:calc(100vw - 78px);margin:14px 48px 0 8px}
+  .cabinet{padding:10px;border-radius:16px}
+  .lever{right:-42px;--L:96px;transform:scale(.85)}
+  .window{padding:0 5px}.reels{gap:4px}
+  .modes{gap:4px;flex-wrap:nowrap}.modes button{min-width:0;font-size:10px;padding:8px 2px;letter-spacing:.04em}
+}
+@media (prefers-reduced-motion:reduce){
+  body,.floor,.neon,.machine::before,.spin,.chip,.coinIcon,.pill.bonus,#banner .ch{animation:none!important}
+  .bulb{animation:none;background:#ffcf4a;box-shadow:0 0 6px 1px #ffb300}
+  .bulb:nth-child(odd){background:#8a6a20;box-shadow:none}
+  .machine.jackpot .bulbs{animation:none}
+}
+</style>
+</head>
+<body>
+<canvas id="bg" aria-hidden="true"></canvas>
+<div class="floor" aria-hidden="true"></div>
+<div id="flash" aria-hidden="true"></div>
+
+<main class="stage">
+  <nav class="topnav" aria-label="Account">
+    <div class="acct" id="acct"></div>
+    <div class="wallet">
+      <button class="pill bonus" id="bonusBtn" hidden>FREE COINS</button>
+      <div class="balance" id="balance" title="Play coins (no cash value)"><span class="coinIcon">S</span><span id="balNum">&mdash;</span></div>
+      <button class="pill gold" id="storeBtn">GET COINS</button>
+    </div>
+  </nav>
+
+  <header class="sign">
+    <h1 class="neon">SLOTS<span>RNG</span></h1>
+    <div class="sub">spin the reels of fate</div>
+  </header>
+
+  <section class="machine" id="machine" aria-label="Slot machine">
+    <div class="bulbs" id="bulbs" aria-hidden="true"></div>
+    <div class="cabinet">
+      <div class="modes" role="tablist" id="modes">
+        <button role="tab" data-mode="number" aria-selected="true"><span class="ic">#</span>NUMBER</button>
+        <button role="tab" data-mode="list" aria-selected="false"><span class="ic">&#9776;</span>LIST</button>
+        <button role="tab" data-mode="coin" aria-selected="false"><span class="ic">&#9673;</span>COIN</button>
+        <button role="tab" data-mode="dice" aria-selected="false"><span class="ic">&#9635;</span>DICE</button>
+      </div>
+      <div class="window" id="window"><div class="payline" aria-hidden="true"></div><div class="reels" id="reels" aria-hidden="true"></div></div>
+      <div class="readout" id="readout" aria-live="polite"><span class="label" id="rlabel">INSERT COIN</span><span class="value" id="rvalue">PULL TO PLAY</span></div>
+      <div class="controls">
+        <div class="panel on" data-panel="number">
+          <div class="range">
+            <div class="field"><label for="min">Min</label><input id="min" type="number" inputmode="numeric" step="1" value="1"></div>
+            <div class="dash">&ndash;</div>
+            <div class="field"><label for="max">Max</label><input id="max" type="number" inputmode="numeric" step="1" value="100"></div>
+          </div>
+        </div>
+        <div class="panel" data-panel="list">
+          <label class="lbl2" for="names">Names / options (one per line or comma-separated)</label>
+          <textarea id="names" spellcheck="false">Ricky
+Miriam
+Alex
+Jordan
+Sam
+Taylor</textarea>
+          <div class="row"><label><input type="checkbox" id="removeWinner"> Remove winner after each pick</label><span id="nameCount"></span></div>
+        </div>
+        <div class="panel" data-panel="coin"><p class="note">Heads or tails? Land the same side 3 times in a row for a streak show.</p></div>
+        <div class="panel" data-panel="dice">
+          <div class="range"><div class="field"><label for="diceN">How many dice</label>
+            <select id="diceN"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option></select></div></div>
+        </div>
+        <div class="msg" id="msg" role="alert"></div>
+      </div>
+      <div class="spinWrap">
+        <button class="spin" id="spin">SPIN<small id="costLbl">10 COINS</small></button>
+        <div class="hint">or press <span class="kbd">SPACE</span> &middot; <button class="pill" id="muteBtn" style="padding:4px 9px;font-size:11px" aria-pressed="false">SOUND ON</button></div>
+      </div>
+    </div>
+    <div class="lever" id="lever" role="button" aria-label="Pull the lever to spin"><div class="slot"></div><div class="arm"></div><div class="hub"></div><div class="ball"></div></div>
+  </section>
+
+  <section class="history" aria-label="Last 10 results">
+    <h2>LAST 10 <button class="pill" id="clearHist">CLEAR</button></h2>
+    <div class="chips" id="history"></div>
+  </section>
+  <div class="foot">Unbiased randomness via <b>crypto.getRandomValues</b> + rejection sampling<span id="srvNote"></span>.<br>
+    Play coins are for entertainment only &mdash; no cash value, never redeemable or cashed out, and spins never pay out coins.</div>
+</main>
+
+<div id="banner" aria-hidden="true"></div>
+<canvas id="fx" aria-hidden="true"></canvas>
+<div class="toast" id="toast" role="status"></div>
+
+<div class="modal" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+  <div class="sheet">
+    <button class="x" data-close aria-label="Close">&times;</button>
+    <h3 id="authTitle">JOIN THE TABLE</h3>
+    <p>Sign in to keep your coins. New players get <b id="startCoins">500</b> free coins + a daily bonus.</p>
+    <button class="oauth google" data-provider="google"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg><span>Continue with Google</span></button>
+    <button class="oauth apple" data-provider="apple"><svg viewBox="0 0 24 24" aria-hidden="true" fill="#fff"><path d="M16.37 12.63c-.03-2.6 2.12-3.85 2.22-3.91-1.21-1.77-3.09-2.01-3.76-2.04-1.6-.16-3.12.94-3.93.94-.81 0-2.06-.92-3.39-.89-1.74.03-3.35 1.01-4.25 2.57-1.81 3.14-.46 7.79 1.3 10.34.86 1.25 1.890 2.65 3.24 2.6 1.3-.05 1.79-.84 3.360-.84 1.57 0 2.01.84 3.38.81 1.4-.03 2.28-1.27 3.13-2.52.99-1.45 1.39-2.85 1.42-2.92-.03-.01-2.72-1.04-2.72-4.14zM13.79 4.98c.72-.87 1.2-2.07 1.07-3.27-1.03.04-2.28.69-3.02 1.55-.66.77-1.24 2-1.09 3.18 1.15.09 2.32-.58 3.04-1.46z"/></svg><span>Continue with Apple</span></button>
+    <p id="authDemoNote" style="font-size:12px;opacity:.75"></p>
+  </div>
+</div>
+
+<div class="modal" id="storeModal" role="dialog" aria-modal="true" aria-labelledby="storeTitle">
+  <div class="sheet">
+    <button class="x" data-close aria-label="Close">&times;</button>
+    <h3 id="storeTitle">GET COINS</h3>
+    <p id="storeSub">Each spin costs <b class="costN">10</b> coins.</p>
+    <div class="packs" id="packs"></div>
+    <div id="fakepay"></div>
+    <div class="legal"><b>Coins have no cash value and cannot be cashed out.</b> Play coins are for entertainment only: they can't be exchanged, transferred, or redeemed for money or prizes, and spins never award coins.</div>
+  </div>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="mb1"><feGaussianBlur stdDeviation="0 1.5"/></filter>
+  <filter id="mb2"><feGaussianBlur stdDeviation="0 3"/></filter>
+  <filter id="mb3"><feGaussianBlur stdDeviation="0 5"/></filter>
+  <filter id="mb4"><feGaussianBlur stdDeviation="0 8"/></filter>
+  <filter id="mb5"><feGaussianBlur stdDeviation="0 12"/></filter>
+</svg>
+
+<script src="config.js"></script>
+<script>
+"use strict";
+/* =====================================================================
+   SLOTS RNG — all inline, zero dependencies.
+   ===================================================================== */
+const CFG = Object.assign({SUPABASE_URL:"",SUPABASE_ANON_KEY:"",SPIN_COST:10,DAILY_BONUS:100,STARTING_BALANCE:500}, window.SLOTS_CONFIG||{});
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const mod = (a,n) => ((a % n) + n) % n;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const LS = { get(k,d){ try{ const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); }catch(e){ return d; } }, set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }, del(k){ try{ localStorage.removeItem(k); }catch(e){} } };
+const RMQ = matchMedia("(prefers-reduced-motion: reduce)");
+let reduced = RMQ.matches;
+if (RMQ.addEventListener) RMQ.addEventListener("change", e => { reduced = e.matches; Bg.reset(); });
+
+/* ---------------- RNG: crypto.getRandomValues + unbiased rejection sampling ---------------- */
+const LIMIT = 999999999;
+function randU32(){ const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0]; }
+function randInt(min, max){ // inclusive on both ends, no modulo bias
+  const range = max - min + 1;
+  if (!Number.isSafeInteger(min) || !Number.isSafeInteger(max) || range < 1 || range > 4294967296) throw new Error("bad range");
+  if (range === 1) return min;
+  const limit = Math.floor(4294967296 / range) * range; // largest multiple of range that fits in 2^32
+  let x; do { x = randU32(); } while (x >= limit);   // reject the biased tail
+  return min + (x % range);
+}
+/* Same result shape as the server-side "spin" edge function. */
+function computeResult(req){
+  switch (req.mode){
+    case "number": return { value: randInt(req.min, req.max) };
+    case "list":   return { index: randInt(0, req.names.length - 1) };
+    case "coin":   return { side: randInt(0, 1) ? "T" : "H" };
+    case "dice":   return { faces: Array.from({length:req.dice}, () => randInt(1, 6)) };
+  }
+  throw new Error("bad mode");
+}
+
+/* ---------------- Sound: synthesized with WebAudio (no audio files) ---------------- */
+const Sfx = (() => {
+  let ctx = null, master = null, noise = null, whir = null, muted = LS.get("slots-muted", false);
+  const VOL = .55;
+  function init(){
+    if (ctx){ if (ctx.state === "suspended") ctx.resume(); return; }
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+    ctx = new AC(); master = ctx.createGain(); master.gain.value = muted ? 0 : VOL;
+    const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 6;
+    master.connect(comp); comp.connect(ctx.destination);
+    noise = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+    const d = noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random()*2 - 1;
+  }
+  const T = () => ctx.currentTime;
+  function tone(f, o={}){
+    if (!ctx || muted) return;
+    const {type="sine", at=0, dur=.15, vol=.25, f2=null, attack=.005} = o, t = T() + at;
+    const osc = ctx.createOscillator(), g = ctx.createGain();
+    osc.type = type; osc.frequency.setValueAtTime(f, t); if (f2) osc.frequency.exponentialRampToValueAtTime(f2, t + dur);
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + attack); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    osc.connect(g); g.connect(master); osc.start(t); osc.stop(t + dur + .03);
+  }
+  function hiss(o={}){
+    if (!ctx || muted) return;
+    const {at=0, dur=.05, vol=.2, type="bandpass", freq=2000, q=1} = o, t = T() + at;
+    const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    s.buffer = noise; f.type = type; f.frequency.value = freq; f.Q.value = q;
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    s.connect(f); f.connect(g); g.connect(master); s.start(t, Math.random()*.5); s.stop(t + dur + .03);
+  }
+  const notes = (seq, o) => seq.forEach(([f, at, dur]) => tone(f, Object.assign({}, o, {at, dur})));
+  return {
+    init, get muted(){ return muted; },
+    setMuted(m){ muted = m; LS.set("slots-muted", m); if (master) master.gain.setTargetAtTime(m ? 0 : VOL, T(), .02); if (m) this.whirStop(); },
+    tick(i=0){ tone(1500 + Math.random()*400 + i*70, {type:"square", dur:.022, vol:.045}); hiss({dur:.014, vol:.05, freq:4200, q:2}); },
+    stop(i=0){ tone(170, {f2:50, dur:.2, vol:.55}); hiss({dur:.07, vol:.35, freq:1100, q:.7}); tone(784*Math.pow(1.122, i), {type:"triangle", at:.025, dur:.22, vol:.13}); },
+    lever(){ for (let k = 0; k < 7; k++) hiss({at:k*.032, dur:.02, vol:.22, freq:2400 + k*220, q:4}); tone(95, {f2:45, at:.24, dur:.16, vol:.45}); },
+    whirStart(){
+      if (!ctx || muted) return; this.whirStop(); const t = T();
+      const src = ctx.createBufferSource(); src.buffer = noise; src.loop = true;
+      const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 900; bp.Q.value = .8;
+      const g = ctx.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.11, t + .18);
+      const lfo = ctx.createOscillator(); lfo.frequency.value = 22; const lg = ctx.createGain(); lg.gain.value = .045; lfo.connect(lg); lg.connect(g.gain);
+      const osc = ctx.createOscillator(); osc.type = "sawtooth"; osc.frequency.value = 72;
+      const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 380; const og = ctx.createGain(); og.gain.value = .3;
+      osc.connect(lp); lp.connect(og); og.connect(g); src.connect(bp); bp.connect(g); g.connect(master);
+      src.start(); lfo.start(); osc.start(); whir = {src, lfo, osc, g, bp};
+    },
+    whirLevel(x){ if (!whir) return; const t = T(); whir.g.gain.setTargetAtTime(Math.max(.0002, .11*x), t, .08); whir.lfo.frequency.setTargetAtTime(6 + 16*x, t, .1); whir.bp.frequency.setTargetAtTime(450 + 550*x, t, .1); },
+    whirStop(){ if (!whir) return; const w = whir; whir = null; const t = T(); w.g.gain.cancelScheduledValues(t); w.g.gain.setTargetAtTime(.0001, t, .05); [w.src, w.lfo, w.osc].forEach(n => { try { n.stop(t + .35); } catch(e){} }); },
+    drumroll(dur=1.4){ for (let t = 0; t < dur; t += .035) hiss({at:t, dur:.03, vol:.08 + .18*(t/dur), freq:300, q:.6}); },
+    win(){ notes([[523.25,0,.18],[659.25,.09,.18],[783.99,.18,.18],[1046.5,.27,.45]], {type:"triangle", vol:.22}); notes([[1318.5,.27,.4]], {type:"sine", vol:.08}); },
+    big(){ notes([[523.25,0,.14],[659.25,.08,.14],[783.99,.16,.14],[1046.5,.24,.14],[783.99,.32,.14],[1046.5,.40,.14],[1318.5,.48,.6]], {type:"square", vol:.09}); this.win(); },
+    jackpot(){
+      notes([[392,0,.16],[523.25,.14,.16],[659.25,.28,.16],[783.99,.42,.3],[659.25,.7,.14],[783.99,.84,.7],[1046.5,1.0,.9]], {type:"square", vol:.1});
+      notes([[196,0,.4],[261.6,.42,.4],[392,.84,1]], {type:"triangle", vol:.25});
+      for (let i = 0; i < 26; i++) tone(1800 + Math.random()*2600, {type:"sine", at:.9 + i*.075, dur:.25, vol:.06});
+    },
+    coinDing(){ tone(1980, {type:"sine", dur:.35, vol:.14}); tone(2970, {type:"sine", at:.06, dur:.4, vol:.1}); },
+    kaching(){ hiss({dur:.05, vol:.3, freq:5000, q:1}); tone(2637, {type:"triangle", at:.04, dur:.4, vol:.15}); tone(3520, {type:"triangle", at:.12, dur:.5, vol:.12}); },
+    click(){ tone(900, {type:"square", dur:.03, vol:.05}); },
+    error(){ tone(220, {type:"sawtooth", dur:.12, vol:.12}); tone(165, {type:"sawtooth", at:.12, dur:.2, vol:.12}); }
+  };
+})();
+
+/* ---------------- Background bokeh orbs ---------------- */
+const Bg = (() => {
+  const cv = $("#bg"), cx = cv.getContext("2d"); let W, H, orbs = [], raf = 0;
+  function resize(){ W = cv.width = Math.ceil(innerWidth/2); H = cv.height = Math.ceil(innerHeight/2); }
+  function reset(){
+    resize();
+    orbs = Array.from({length:26}, () => ({ x:Math.random()*W, y:Math.random()*H, r:15 + Math.random()*70, vx:(Math.random()-.5)*.25, vy:(Math.random()-.5)*.25,
+      h:[300,320,190,200,45,270][Math.floor(Math.random()*6)], a:.08 + Math.random()*.16, p:Math.random()*6.28 }));
+    cancelAnimationFrame(raf); draw();
+  }
+  function draw(){
+    cx.clearRect(0, 0, W, H); cx.globalCompositeOperation = "lighter";
+    for (const o of orbs){
+      if (!reduced){ o.x += o.vx; o.y += o.vy; o.p += .01; if (o.x < -80) o.x = W + 80; if (o.x > W + 80) o.x = -80; if (o.y < -80) o.y = H + 80; if (o.y > H + 80) o.y = -80; }
+      const a = o.a*(.7 + .3*Math.sin(o.p)), g = cx.createRadialGradient(o.x, o.y, 0, o.x, o.y, o.r);
+      g.addColorStop(0, `hsla(${o.h},100%,70%,${a})`); g.addColorStop(1, `hsla(${o.h},100%,60%,0)`);
+      cx.fillStyle = g; cx.beginPath(); cx.arc(o.x, o.y, o.r, 0, 6.283); cx.fill();
+    }
+    if (!reduced) raf = requestAnimationFrame(draw);
+  }
+  addEventListener("resize", () => { resize(); if (reduced) draw(); });
+  return { reset };
+})();
+
+/* ---------------- Particles: confetti, sparks, coin shower, fireworks ---------------- */
+const FX = (() => {
+  const cv = $("#fx"), cx = cv.getContext("2d"); let W, H, dpr, P = [], running = false, lastT = 0;
+  const COLORS = ["#ff2bd6","#21f3ff","#ffcf4a","#7bff5a","#ff5a36","#ffffff","#9b5cff","#ff8bea"];
+  const pick = a => a[Math.floor(Math.random()*a.length)];
+  function resize(){ dpr = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = W*dpr; cv.height = H*dpr; cx.setTransform(dpr, 0, 0, dpr, 0, 0); }
+  resize(); addEventListener("resize", resize);
+  const cap = () => reduced ? 60 : 1100;
+  function add(p){ if (P.length < cap()) P.push(p); }
+  function confetti(x, y, n, power=1){
+    if (reduced) n = Math.min(n, 18);
+    for (let i = 0; i < n; i++){ const a = -Math.PI/2 + (Math.random()-.5)*2.2, s = (6 + Math.random()*12)*power;
+      add({k:"c", x, y, vx:Math.cos(a)*s, vy:Math.sin(a)*s, w:5 + Math.random()*6, h:8 + Math.random()*9, r:Math.random()*6.28, vr:(Math.random()-.5)*.35, f:Math.random()*6.28, c:pick(COLORS), life:1, d:.0035 + Math.random()*.004}); }
+    kick();
+  }
+  function sparks(x, y, n, hue=null, speed=7){
+    if (reduced) n = Math.min(n, 12);
+    for (let i = 0; i < n; i++){ const a = Math.random()*6.283, s = speed*(.35 + Math.random()*.75);
+      add({k:"s", x, y, vx:Math.cos(a)*s, vy:Math.sin(a)*s, h:hue == null ? Math.random()*360 : hue + (Math.random()-.5)*40, life:1, d:.012 + Math.random()*.014, sz:1.5 + Math.random()*2.5}); }
+    kick();
+  }
+  function coins(n){
+    if (reduced) n = Math.min(n, 15);
+    for (let i = 0; i < n; i++) add({k:"o", x:Math.random()*W, y:-30 - Math.random()*H*.8, vx:(Math.random()-.5)*2, vy:2 + Math.random()*4, r:9 + Math.random()*9, ph:Math.random()*6.28, vp:.12 + Math.random()*.2, life:1, d:0});
+    kick();
+  }
+  function firework(x, y){ const h = Math.random()*360; sparks(x, y, 70, h, 9); sparks(x, y, 25, (h + 180) % 360, 4); }
+  function kick(){ if (!running){ running = true; lastT = performance.now(); requestAnimationFrame(step); } }
+  function step(now){
+    const k = Math.min(3, Math.max(0, (now - lastT)/16.67)); lastT = now;
+    cx.clearRect(0, 0, W, H);
+    for (let i = P.length - 1; i >= 0; i--){
+      const p = P[i];
+      if (p.k === "c"){
+        p.vx *= Math.pow(.985, k); p.vy = p.vy*Math.pow(.985, k) + .32*k; if (p.vy > 6) p.vy = 6;
+        p.f += .12*k; p.x += (p.vx + Math.sin(p.f)*1.2)*k; p.y += p.vy*k; p.r += p.vr*k; p.life -= p.d*k;
+        cx.save(); cx.translate(p.x, p.y); cx.rotate(p.r); cx.scale(1, Math.cos(p.f*1.3)); cx.globalAlpha = Math.max(0, Math.min(1, p.life*2));
+        cx.fillStyle = p.c; cx.fillRect(-p.w/2, -p.h/2, p.w, p.h); cx.restore();
+      } else if (p.k === "s"){
+        p.vx *= Math.pow(.955, k); p.vy = p.vy*Math.pow(.955, k) + .09*k; p.x += p.vx*k; p.y += p.vy*k; p.life -= p.d*k;
+        cx.globalCompositeOperation = "lighter"; cx.globalAlpha = Math.max(0, p.life);
+        cx.fillStyle = `hsl(${p.h},100%,${60 + 30*Math.max(0,p.life)}%)`; cx.beginPath(); cx.arc(p.x, p.y, p.sz*(.5 + Math.max(0,p.life)), 0, 6.283); cx.fill();
+        cx.globalAlpha = Math.max(0, p.life*.25); cx.beginPath(); cx.arc(p.x, p.y, Math.max(.1, p.sz*4*p.life), 0, 6.283); cx.fill();
+        cx.globalCompositeOperation = "source-over";
+      } else {
+        p.vy += .12*k; p.x += p.vx*k; p.y += p.vy*k; p.ph += p.vp*k;
+        const w = Math.abs(Math.cos(p.ph))*p.r + 1;
+        cx.globalAlpha = 1; cx.fillStyle = Math.cos(p.ph) > 0 ? "#ffcf4a" : "#e0a400"; cx.strokeStyle = "#a86f00"; cx.lineWidth = 2;
+        cx.beginPath(); cx.ellipse(p.x, p.y, w, p.r, 0, 0, 6.283); cx.fill(); cx.stroke();
+        if (w > p.r*.5){ cx.fillStyle = "#fff6c0"; cx.beginPath(); cx.ellipse(p.x - w*.3, p.y - p.r*.35, w*.25, p.r*.2, 0, 0, 6.283); cx.fill(); }
+      }
+      if (p.life <= 0 || p.y > H + 60) P.splice(i, 1);
+    }
+    cx.globalAlpha = 1;
+    if (P.length) requestAnimationFrame(step); else running = false;
+  }
+  return { confetti, sparks, coins, firework, count: () => P.length };
+})();
+
+/* ---------------- Reel engine: virtual reel (5 DOM cells, any number of symbols) ---------------- */
+class Reel {
+  constructor(parent, spec){
+    this.spec = spec; this.symbols = spec.symbols; this.p = spec.start || 0;
+    this.el = document.createElement("div"); this.el.className = "reel" + (spec.cls ? " " + spec.cls : "");
+    this.strip = document.createElement("div"); this.strip.className = "strip"; this.el.appendChild(this.strip);
+    this.cells = Array.from({length:5}, () => { const c = document.createElement("div"); c.className = "cell"; c._idx = null; this.strip.appendChild(c); return c; });
+    parent.appendChild(this.el); this.H = 80; this.off = 0;
+  }
+  get n(){ return this.symbols.length; }
+  setSymbols(s){ this.symbols = s; this.p = mod(Math.round(this.p), s.length); this.cells.forEach(c => c._idx = null); this.draw(); }
+  measure(){
+    this.H = this.cells[0].offsetHeight || 80; this.off = (this.el.clientHeight - this.H)/2;
+    const w = this.el.clientWidth || 60; this.el.style.fontSize = this.spec.font(this.H, w) + "px";
+    this.cells.forEach(c => c._idx = null); this.draw();
+  }
+  draw(){
+    const base = Math.floor(this.p);
+    for (let k = -2; k <= 2; k++){
+      const idx = base + k, c = this.cells[mod(idx, 5)];
+      if (c._idx !== idx){ c._idx = idx; c.innerHTML = this.spec.render(this.symbols[mod(idx, this.n)]); }
+      c.style.transform = `translate3d(0,${((this.p - idx)*this.H + this.off).toFixed(2)}px,0)`;
+    }
+  }
+  /* Spin forward and land on symbol index `target`: wind-up, fast blur, eased decel, spring bounce. */
+  spin(target, o){
+    return new Promise(resolve => {
+      const n = this.n, p0 = this.p, wind = reduced ? 0 : .42, over = reduced ? .1 : .34;
+      let T = Math.ceil(p0 + o.travel); T += mod(target - T, n);
+      const D = o.duration, tw = reduced ? 0 : .07, ts = .86, pW = p0 - wind, pS = T + over;
+      const t0 = performance.now(); let lastP = p0, lastNow = t0, landed = false;
+      const step = now => {
+        const t = Math.min(1, Math.max(0, (now - t0)/D)); let p;
+        if (t < tw) p = p0 - wind*Math.sin((t/tw)*Math.PI/2);
+        else if (t < ts){ const s = (t - tw)/(ts - tw); p = pW + (pS - pW)*(1 - Math.pow(1 - s, 4)); }
+        else { if (!landed){ landed = true; o.onLand && o.onLand(); } const s = (t - ts)/(1 - ts); p = T + over*Math.cos(s*Math.PI*2.5)*Math.exp(-4*s); }
+        if (t >= 1) p = T;
+        const dt = Math.max(1, now - lastNow), v = Math.abs(p - lastP)/dt*16.67; // cells per frame
+        if (Math.floor(p) !== Math.floor(lastP) && o.onTick) o.onTick(v);
+        lastP = p; lastNow = now; this.p = p; this.draw();
+        const lvl = reduced ? 0 : Math.min(5, Math.floor(v*4.5));
+        this.strip.style.filter = lvl ? `url(#mb${lvl})` : "";
+        if (t < 1) requestAnimationFrame(step);
+        else { this.p = mod(T, n); this.strip.style.filter = ""; this.draw(); resolve(); }
+      };
+      requestAnimationFrame(step);
+    });
+  }
+}
+
+/* ---------------- Modes ---------------- */
+const DIGITS = "0123456789".split("");
+const PIPS = {1:[4], 2:[0,8], 3:[0,4,8], 4:[0,2,6,8], 5:[0,2,4,6,8], 6:[0,2,3,5,6,8]};
+const dieHTML = f => `<span class="die">${Array.from({length:9}, (_, i) => `<i class="${PIPS[f].includes(i) ? "on" : ""}"></i>`).join("")}</span>`;
+const coinHTML = s => `<span class="coinFace ${s === "T" ? "t" : ""}"><span class="disc"><b>${s}</b></span><span class="lbl">${s === "H" ? "HEADS" : "TAILS"}</span></span>`;
+const State = { mode: LS.get("slots-mode", "number"), spinning: false, last: null, spins: 0, coinStreak: {side:null, n:0} };
+let reels = [];
+
+function parseNames(){ return $("#names").value.split(/[\n,]/).map(s => s.trim()).filter(Boolean).slice(0, 500); }
+function readRange(){
+  const a = $("#min").value, b = $("#max").value;
+  let min = Number(a), max = Number(b);
+  if (a === "" || b === "" || !Number.isFinite(min) || !Number.isFinite(max)) return {err:"Enter a whole-number min and max."};
+  min = Math.trunc(min); max = Math.trunc(max);
+  if (Math.abs(min) > LIMIT || Math.abs(max) > LIMIT) return {err:`Keep it between -${LIMIT.toLocaleString()} and ${LIMIT.toLocaleString()}.`};
+  let swapped = false; if (min > max){ [min, max] = [max, min]; swapped = true; }
+  return {min, max, swapped};
+}
+function numberLayout(){
+  const r = readRange(); if (r.err) return null;
+  return {min:r.min, max:r.max, digits:Math.max(String(Math.abs(r.min)).length, String(Math.abs(r.max)).length), sign:r.min < 0};
+}
+function buildReels(){
+  const box = $("#reels"); box.innerHTML = ""; const specs = [];
+  const numFont = (H, w) => Math.min(H*.8, w*1.32);
+  if (State.mode === "number"){
+    const L = numberLayout() || {digits:3, sign:false};
+    if (L.sign) specs.push({symbols:["+", "\u2212"], render:s => s, font:numFont, cls:"sign"});
+    for (let i = 0; i < L.digits; i++) specs.push({symbols:DIGITS, render:d => d === "7" ? `<span class="seven">7</span>` : d, font:numFont, start:7});
+  } else if (State.mode === "list"){
+    const names = parseNames(), syms = names.length ? names : ["add names!"], longest = Math.max(...syms.map(s => s.length));
+    specs.push({symbols:syms, render:s => `<span class="name">${esc(s)}</span>`, font:(H, w) => Math.max(14, Math.min(H*.5, w/(Math.max(6, longest)*.62))), cls:"wide"});
+  } else if (State.mode === "coin"){
+    specs.push({symbols:["H", "T"], render:coinHTML, font:H => H*1.15, cls:"wide"});
+  } else {
+    const n = Number($("#diceN").value) || 2;
+    for (let i = 0; i < n; i++) specs.push({symbols:[1,2,3,4,5,6], render:dieHTML, font:(H, w) => Math.min(H*1.2, w*1.35), start:i*2 + 5});
+  }
+  reels = specs.map(s => new Reel(box, s));
+  reels.forEach(r => r.measure());
+}
+function setMode(m){
+  if (State.spinning) return;
+  State.mode = m; LS.set("slots-mode", m);
+  $$("#modes button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.mode === m)));
+  $$(".panel").forEach(p => p.classList.toggle("on", p.dataset.panel === m));
+  setMsg(""); buildReels();
+  setReadout({number:"INSERT COIN", list:"WHO WILL IT BE?", coin:"CALL IT IN THE AIR", dice:"ROLL 'EM"}[m], "PULL TO PLAY", false, false);
+}
+function setReadout(label, value, pop=true, jack=false){
+  $("#rlabel").textContent = label; const v = $("#rvalue"); v.textContent = value;
+  $("#readout").classList.toggle("jack", jack);
+  if (pop && !reduced){ v.classList.remove("pop"); void v.offsetWidth; v.classList.add("pop"); }
+}
+function setMsg(t){ const m = $("#msg"); m.textContent = t; if (t && !reduced){ m.classList.remove("shake"); void m.offsetWidth; m.classList.add("shake"); } }
+function toast(t, ms=2800){ const el = $("#toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), ms); }
+
+/* ---------------- Marquee bulbs around the cabinet ---------------- */
+function layoutBulbs(){
+  const m = $("#machine"), b = $("#bulbs"), W = m.offsetWidth, H = m.offsetHeight, inset = innerWidth < 560 ? 8 : 13, R = 18;
+  const w = W - 2*inset, h = H - 2*inset, per = 2*(w + h), N = Math.max(16, Math.round(per/30)), pts = [];
+  for (let i = 0; i < N; i++){
+    let d = i/N*per, x, y;
+    if (d < w){ x = d; y = 0; } else if ((d -= w) < h){ x = w; y = d; } else if ((d -= h) < w){ x = w - d; y = h; } else { d -= w; x = 0; y = h - d; }
+    if (Math.min(x, w - x) < R && Math.min(y, h - y) < R){ const ax = x < R ? R : w - R, ay = y < R ? R : h - R, ang = Math.atan2(y - ay, x - ax); x = ax + Math.cos(ang)*R; y = ay + Math.sin(ang)*R; }
+    pts.push([x + inset, y + inset]);
+  }
+  b.innerHTML = pts.map(([x, y], i) => `<span class="bulb" style="left:${x.toFixed(1)}px;top:${y.toFixed(1)}px;--f:${((i*3/N) % 1).toFixed(3)}"></span>`).join("");
+}
+
+/* ---------------- Banner / flash / shake / history ---------------- */
+function banner(text, cls, sub=""){
+  const b = $("#banner"); clearTimeout(banner.t); clearTimeout(banner.t2);
+  b.className = ""; b.innerHTML = [...text].map((ch, i) => `<span class="ch" style="--i:${i}">${ch === " " ? "&nbsp;" : esc(ch)}</span>`).join("") + (sub ? `<small>${esc(sub)}</small>` : "");
+  void b.offsetWidth; b.className = "show " + cls;
+  const life = cls === "jackpot" ? 3200 : 1900;
+  banner.t = setTimeout(() => b.classList.add("out"), life); banner.t2 = setTimeout(() => { b.className = ""; b.innerHTML = ""; }, life + 600);
+}
+function flash(kind="go"){ if (reduced) return; const f = $("#flash"); f.className = ""; void f.offsetWidth; f.className = kind; }
+function shake(kind="shake"){ if (reduced) return; const m = $("#machine"); m.classList.remove("shake", "quake"); void m.offsetWidth; m.classList.add(kind); setTimeout(() => m.classList.remove(kind), 1000); }
+let hist = LS.get("slots-history", []);
+function renderHistory(fresh=false){
+  const tag = {number:"#", list:"L", coin:"C", dice:"D"};
+  $("#history").innerHTML = hist.length ? hist.map((h, i) =>
+    `<div class="chip m-${h.mode} ${h.tier} ${fresh && i === 0 ? "new" : ""}" style="--i:${i}" title="${esc(h.full || h.text)}"><i>${tag[h.mode]}</i><b>${esc(h.text)}</b></div>`).join("")
+    : `<div class="empty">No spins yet &mdash; pull the lever!</div>`;
+}
+function pushHistory(e){ hist.unshift(e); hist = hist.slice(0, 10); LS.set("slots-history", hist); renderHistory(true); }
+
+/* ---------------- Economy + auth backends ---------------- */
+const DEFAULT_PACKS = [
+  {id:"pack_small",  coins:100,  price_cents:99,   label:""},
+  {id:"pack_medium", coins:600,  price_cents:499,  label:"+20% BONUS"},
+  {id:"pack_large",  coins:1300, price_cents:999,  label:"POPULAR"},
+  {id:"pack_mega",   coins:3000, price_cents:1999, label:"BEST VALUE"}
+];
+class BackendError extends Error { constructor(code, msg){ super(msg || code); this.code = code; } }
+const utcDay = d => new Date(d).toISOString().slice(0, 10);
+
+/* DEMO MODE — fully local: pretend sign-in, localStorage balance, fake test checkout. */
+class DemoBackend {
+  constructor(){ this.kind = "demo"; this.s = LS.get("slots-demo-account", null); this.packs = DEFAULT_PACKS; this.spinCost = CFG.SPIN_COST; }
+  save(){ LS.set("slots-demo-account", this.s); }
+  async init(){}
+  get user(){ return this.s && this.s.user; }
+  get balance(){ return this.s ? this.s.balance : 0; }
+  bonusAvailable(){ return !!this.s && (!this.s.lastBonus || utcDay(this.s.lastBonus) !== utcDay(Date.now())); }
+  ledger(delta, reason){ this.s.balance += delta; this.s.ledger = [{delta, reason, balance:this.s.balance, at:new Date().toISOString()}].concat(this.s.ledger || []).slice(0, 100); this.save(); }
+  async signIn(provider){
+    await sleep(450);
+    this.s = { user:{ id:"demo-" + randU32().toString(16), name:provider === "apple" ? "Apple Demo Player" : "Google Demo Player", provider:provider + " (demo)" }, balance:0, lastBonus:null, ledger:[] };
+    this.ledger(CFG.STARTING_BALANCE, "signup_bonus"); return true;
+  }
+  async signOut(){ this.s = null; LS.del("slots-demo-account"); }
+  async claimBonus(){ if (!this.bonusAvailable()) throw new BackendError("already_claimed"); this.s.lastBonus = new Date().toISOString(); this.ledger(CFG.DAILY_BONUS, "daily_bonus"); return {granted:CFG.DAILY_BONUS, balance:this.balance}; }
+  async spin(req){
+    if (!this.user) throw new BackendError("not_signed_in");
+    if (this.balance < this.spinCost) throw new BackendError("insufficient_funds");
+    const result = computeResult(req); this.ledger(-this.spinCost, "spin"); return {result, balance:this.balance};
+  }
+  async completeFakePurchase(packId){ const p = this.packs.find(x => x.id === packId); await sleep(900); this.ledger(p.coins, "purchase"); return {balance:this.balance}; }
+}
+
+/* LIVE MODE — Supabase Auth (Google/Apple), RLS-protected tables, Edge Functions for spin + checkout.
+   Plain fetch against Supabase's HTTP APIs so the page has no third-party JS. */
+class SupabaseBackend {
+  constructor(url, anon){ this.kind = "live"; this.url = url.replace(/\/$/, ""); this.anon = anon; this.session = LS.get("slots-sb-session", null); this.profile = null; this.packs = DEFAULT_PACKS; this.spinCost = CFG.SPIN_COST; }
+  headers(auth=true){ return {"apikey":this.anon, "Content-Type":"application/json", "Authorization":"Bearer " + (auth && this.session ? this.session.access_token : this.anon)}; }
+  async j(path, opt={}){
+    const r = await fetch(this.url + path, opt), t = await r.text(); let d = null;
+    try { d = t ? JSON.parse(t) : null; } catch(e){ d = {raw:t}; }
+    if (!r.ok) throw new BackendError((d && (d.code || d.error)) || ("http_" + r.status), (d && (d.message || d.msg || d.error_description)) || r.statusText);
+    return d;
+  }
+  async init(){
+    if (location.hash.includes("access_token=")){ // OAuth redirect back (implicit flow)
+      const q = new URLSearchParams(location.hash.slice(1));
+      this.session = {access_token:q.get("access_token"), refresh_token:q.get("refresh_token"), expires_at:Math.floor(Date.now()/1000) + Number(q.get("expires_in") || 3600)};
+      LS.set("slots-sb-session", this.session); window.history.replaceState(null, "", location.pathname + location.search);
+    }
+    if (this.session){ try { await this.loadProfile(); } catch(e){ this.clear(); } }
+    try { const p = await this.j("/rest/v1/coin_packs?select=id,coins,price_cents,label&active=is.true&order=sort", {headers:this.headers(false)}); if (p && p.length) this.packs = p; } catch(e){}
+    try { const s = await this.j("/rest/v1/app_settings?select=spin_cost&id=eq.1", {headers:this.headers(false)}); if (s && s[0]) this.spinCost = s[0].spin_cost; } catch(e){}
+    const qs = new URLSearchParams(location.search);
+    if (qs.get("checkout")){ const ok = qs.get("checkout") === "success"; window.history.replaceState(null, "", location.pathname); if (ok){ toast("Payment received, adding coins..."); this.pollBalance(); } else toast("Checkout canceled. No charge."); }
+  }
+  clear(){ this.session = null; this.profile = null; LS.del("slots-sb-session"); }
+  async refresh(){
+    const d = await this.j("/auth/v1/token?grant_type=refresh_token", {method:"POST", headers:this.headers(false), body:JSON.stringify({refresh_token:this.session.refresh_token})});
+    this.session = {access_token:d.access_token, refresh_token:d.refresh_token, expires_at:d.expires_at || Math.floor(Date.now()/1000) + d.expires_in}; LS.set("slots-sb-session", this.session);
+  }
+  async authed(){ if (!this.session) throw new BackendError("not_signed_in"); if (this.session.expires_at - 60 < Date.now()/1000) await this.refresh(); }
+  async loadProfile(){
+    await this.authed();
+    const u = await this.j("/auth/v1/user", {headers:this.headers()});
+    const rows = await this.j(`/rest/v1/profiles?select=coin_balance,last_bonus_at,display_name&id=eq.${encodeURIComponent(u.id)}`, {headers:this.headers()});
+    const md = u.user_metadata || {};
+    this.profile = {id:u.id, name:(rows[0] && rows[0].display_name) || md.full_name || md.name || u.email || "Player", provider:(u.app_metadata || {}).provider,
+                    balance:rows[0] ? Number(rows[0].coin_balance) : 0, lastBonus:rows[0] && rows[0].last_bonus_at};
+  }
+  async pollBalance(){ const before = this.balance; for (let i = 0; i < 12; i++){ await sleep(1500); try { await this.loadProfile(); } catch(e){} if (this.balance !== before){ App.onBalance(true); Sfx.kaching(); toast("Coins added. Thanks!"); return; } } }
+  get user(){ return this.profile; }
+  get balance(){ return this.profile ? this.profile.balance : 0; }
+  bonusAvailable(){ return !!this.profile && (!this.profile.lastBonus || utcDay(this.profile.lastBonus) !== utcDay(Date.now())); }
+  async signIn(provider){ location.href = `${this.url}/auth/v1/authorize?provider=${encodeURIComponent(provider)}&redirect_to=${encodeURIComponent(location.origin + location.pathname)}`; return new Promise(() => {}); }
+  async signOut(){ try { await this.authed(); await fetch(this.url + "/auth/v1/logout", {method:"POST", headers:this.headers()}); } catch(e){} this.clear(); }
+  async claimBonus(){
+    await this.authed(); const d = await this.j("/rest/v1/rpc/claim_daily_bonus", {method:"POST", headers:this.headers(), body:"{}"});
+    this.profile.balance = Number(d.balance); if (!d.granted) throw new BackendError("already_claimed"); this.profile.lastBonus = new Date().toISOString(); return d;
+  }
+  async spin(req){ await this.authed(); const d = await this.j("/functions/v1/spin", {method:"POST", headers:this.headers(), body:JSON.stringify(req)}); this.profile.balance = Number(d.balance); return d; }
+  async checkout(packId){ await this.authed(); const d = await this.j("/functions/v1/create-checkout-session", {method:"POST", headers:this.headers(), body:JSON.stringify({pack_id:packId})}); location.href = d.url; }
+}
+
+const Backend = (CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY) ? new SupabaseBackend(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY) : new DemoBackend();
+const App = {
+  shownBal: 0,
+  renderAccount(){
+    const u = Backend.user, a = $("#acct"), demo = Backend.kind === "demo" ? '<span class="demoTag" title="Demo mode: nothing leaves this browser">DEMO</span>' : "";
+    if (!u){ a.innerHTML = `<button class="pill" id="signInBtn">SIGN IN</button>${demo}`; $("#signInBtn").onclick = () => openModal("#authModal"); }
+    else {
+      a.innerHTML = `<div class="avatar">${esc((u.name || "P")[0].toUpperCase())}</div><div class="who">${esc(u.name)}<small>${esc(u.provider || "")} &middot; <a href="#" id="signOut" style="color:#bff8ff">sign out</a></small></div>${demo}`;
+      $("#signOut").onclick = async e => { e.preventDefault(); await Backend.signOut(); App.renderAccount(); App.onBalance(false); };
+    }
+    $("#bonusBtn").hidden = !Backend.bonusAvailable();
+  },
+  onBalance(animate=true){
+    const el = $("#balNum"), box = $("#balance");
+    if (!Backend.user){ el.textContent = "\u2014"; this.shownBal = 0; $("#bonusBtn").hidden = true; return; }
+    const from = this.shownBal, to = Backend.balance; this.shownBal = to;
+    if (animate && !reduced && from !== to){
+      box.classList.remove("bump", "drain"); void box.offsetWidth; box.classList.add(to > from ? "bump" : "drain");
+      const t0 = performance.now(), D = to > from ? 1100 : 420;
+      const step = now => { const t = Math.min(1, (now - t0)/D), e = 1 - Math.pow(1 - t, 3); el.textContent = Math.round(from + (to - from)*e).toLocaleString(); if (t < 1) requestAnimationFrame(step); };
+      requestAnimationFrame(step);
+      if (to > from){ let k = 0; const n = Math.min(12, Math.ceil((to - from)/50)); const iv = setInterval(() => { Sfx.coinDing(); if (++k >= n) clearInterval(iv); }, 70); }
+    } else el.textContent = to.toLocaleString();
+    $("#bonusBtn").hidden = !Backend.bonusAvailable();
+  }
+};
+
+function openModal(sel){ Sfx.init(); Sfx.click(); $(sel).classList.add("open"); if (sel === "#storeModal") renderStore(); }
+function closeModal(el){ el.classList.remove("open"); }
+$$(".modal").forEach(m => m.addEventListener("click", e => { if (e.target === m || e.target.closest("[data-close]")) closeModal(m); }));
+addEventListener("keydown", e => { if (e.key === "Escape") $$(".modal.open").forEach(closeModal); });
+function burstAt(el, n){ const r = el.getBoundingClientRect(); FX.confetti(r.left + r.width/2, r.top + r.height/2, n, .7); FX.sparks(r.left + r.width/2, r.top + r.height/2, 30, 45, 5); }
+$$(".oauth").forEach(b => b.onclick = async () => {
+  const lbl = b.querySelector("span"), old = lbl.textContent; b.disabled = true; lbl.textContent = "Connecting...";
+  try {
+    await Backend.signIn(b.dataset.provider); closeModal($("#authModal")); App.renderAccount(); App.onBalance(true);
+    toast(`Welcome! ${Backend.balance.toLocaleString()} free coins in your tray.`); burstAt($("#balance"), 40);
+  } catch(e){ toast("Sign-in failed: " + e.message); }
+  finally { b.disabled = false; lbl.textContent = old; }
+});
+function renderStore(){
+  $$(".costN").forEach(e => e.textContent = Backend.spinCost);
+  $("#fakepay").innerHTML = "";
+  $("#packs").innerHTML = Backend.packs.map((p, i) => `<button class="pack" data-pack="${esc(p.id)}">${p.label ? `<span class="tag">${esc(p.label)}</span>` : ""}
+    <div class="stack">${'<span class="coinIcon">S</span>'.repeat(Math.min(4, i + 1))}</div>
+    <div class="amt">${Number(p.coins).toLocaleString()} <small>COINS</small></div><div class="note" style="font-size:11px">${Math.floor(p.coins/Backend.spinCost)} spins</div>
+    <span class="price">$${(p.price_cents/100).toFixed(2)}</span></button>`).join("");
+  $$("#packs .pack").forEach(b => b.onclick = () => buy(b.dataset.pack));
+}
+async function buy(packId){
+  if (!Backend.user){ closeModal($("#storeModal")); openModal("#authModal"); toast("Sign in first so we know where to put the coins."); return; }
+  const p = Backend.packs.find(x => x.id === packId);
+  if (Backend.kind === "live"){ try { toast("Opening secure Stripe checkout..."); await Backend.checkout(packId); } catch(e){ toast("Checkout error: " + e.message); } return; }
+  const price = `$${(p.price_cents/100).toFixed(2)}`;
+  $("#fakepay").innerHTML = `<div class="fakepay"><span class="tm">DEMO &middot; TEST MODE &middot; NO REAL CHARGE</span>
+    <div class="ln"><span>${p.coins.toLocaleString()} play coins</span><b>${price}</b></div>
+    <div class="card">4242 4242 4242 4242 &nbsp; 12/34 &nbsp; 123</div><button id="fakePayBtn">Pay ${price} (fake)</button></div>`;
+  $("#fakePayBtn").onclick = async e => {
+    e.target.disabled = true; e.target.textContent = "Processing...";
+    await Backend.completeFakePurchase(packId); closeModal($("#storeModal"));
+    Sfx.kaching(); App.onBalance(true); burstAt($("#balance"), 60); FX.coins(40); toast(`+${p.coins.toLocaleString()} coins (demo purchase, no charge)`);
+  };
+  $("#fakepay").scrollIntoView({behavior:"smooth", block:"nearest"});
+}
+$("#storeBtn").onclick = () => openModal("#storeModal");
+$("#bonusBtn").onclick = async () => {
+  Sfx.init();
+  if (!Backend.user){ openModal("#authModal"); return; }
+  try { const d = await Backend.claimBonus(); Sfx.kaching(); App.onBalance(true); burstAt($("#balance"), 50); toast(`Daily bonus: +${d.granted} coins! Come back tomorrow.`); }
+  catch(e){ toast(e.code === "already_claimed" ? "Already claimed today. Come back tomorrow!" : "Bonus error: " + e.message); }
+  $("#bonusBtn").hidden = !Backend.bonusAvailable();
+};
+
+/* ---------------- Spin orchestration ---------------- */
+const isRep = s => s.length >= 2 && /^(\d)\1+$/.test(s);
+function buildRequest(){
+  const m = State.mode;
+  if (m === "number"){
+    const r = readRange(); if (r.err) return {err:r.err};
+    if (r.swapped){ $("#min").value = r.min; $("#max").value = r.max; }
+    const L = numberLayout(); if (reels.length !== (L.sign ? 1 : 0) + L.digits) buildReels();
+    return {req:{mode:"number", min:r.min, max:r.max}};
+  }
+  if (m === "list"){
+    const names = parseNames();
+    if (names.length < 2) return {err:"Add at least 2 names to pick from."};
+    if (names.some(n => n.length > 80)) return {err:"Keep each entry under 80 characters."};
+    if (reels[0].n !== names.length || reels[0].symbols.some((s, i) => s !== names[i])) buildReels();
+    return {req:{mode:"list", names}};
+  }
+  if (m === "coin") return {req:{mode:"coin"}};
+  return {req:{mode:"dice", dice:Number($("#diceN").value) || 2}};
+}
+/* Turn a raw result into reel targets + presentation (tier: "", "big", "jackpot"). */
+function present(req, res){
+  if (req.mode === "number"){
+    const v = res.value, L = numberLayout(), abs = String(Math.abs(v)), s = abs.padStart(L.digits, "0");
+    const targets = (L.sign ? [v < 0 ? 1 : 0] : []).concat([...s].map(Number));
+    let tier = "", reason = "";
+    if (isRep(abs)){ tier = "jackpot"; reason = abs[0] === "7" ? "LUCKY SEVENS" : `ALL ${abs[0]}s!`; }
+    else if (abs.includes("777")){ tier = "jackpot"; reason = "TRIPLE SEVEN"; }
+    else if (v === req.max && req.max !== req.min){ tier = "jackpot"; reason = "MAXED OUT!"; }
+    else if (abs.length >= 3 && abs === [...abs].reverse().join("")){ tier = "big"; reason = "PALINDROME"; }
+    else if (v === 7){ tier = "big"; reason = "LUCKY 7"; }
+    else if (v === req.min && req.max !== req.min){ tier = "big"; reason = "ROCK BOTTOM"; }
+    // Honest suspense: last reel lingers only when the digits already showing could still form a pattern.
+    const lead = s.search(/[^0]/), sig = lead < 0 ? "" : s.slice(lead, -1), maxS = String(Math.abs(req.max)).padStart(L.digits, "0");
+    const tension = s.length >= 3 && sig.length >= 2 && (/^(\d)\1+$/.test(sig) || (v >= 0 && maxS.slice(0, -1) === s.slice(0, -1)));
+    return {targets, label:"YOUR NUMBER", value:v.toLocaleString(), chip:String(v), tier, reason, tension, dimLead:lead < 0 ? s.length - 1 : lead, sign:L.sign, neg:v < 0};
+  }
+  if (req.mode === "list"){
+    const name = req.names[res.index];
+    return {targets:[res.index], label:"THE WINNER IS", value:name, chip:name.length > 14 ? name.slice(0, 13) + "\u2026" : name, full:name, tier:"big", reason:"WINNER!", winner:name};
+  }
+  if (req.mode === "coin"){
+    const sd = res.side, st = State.coinStreak; if (st.side === sd) st.n++; else { st.side = sd; st.n = 1; }
+    const tier = st.n >= 5 ? "jackpot" : st.n >= 3 ? "big" : "", word = sd === "H" ? "HEADS" : "TAILS";
+    return {targets:[sd === "H" ? 0 : 1], label:"IT'S", value:word, chip:word, tier, reason:tier ? `${word} x${st.n}!` : ""};
+  }
+  const f = res.faces, total = f.reduce((a, b) => a + b, 0), same = f.length >= 2 && f.every(x => x === f[0]);
+  const combo = {2:"DOUBLES", 3:"TRIPLES", 4:"QUADS", 5:"FIVE OF A KIND"};
+  const tier = same ? "jackpot" : (f.length >= 2 && total === 6*f.length - 1) ? "big" : "";
+  return {targets:f.map(x => x - 1), label:f.length > 1 ? "TOTAL" : "YOU ROLLED", value:f.length > 1 ? `${f.join(" + ")} = ${total}` : String(total),
+          chip:f.length > 1 ? `${total} (${f.join("\u00b7")})` : String(total), tier, reason:same ? (f[0] === 6 ? "BOXCARS " : "") + combo[f.length] + "!" : tier ? "SO CLOSE!" : "",
+          tension:f.length >= 3 && f.slice(0, -1).every(x => x === f[0])};
+}
+function lockUI(on){
+  State.spinning = on; $("#machine").classList.toggle("spinning", on);
+  const btn = $("#spin"); btn.disabled = on; btn.firstChild.textContent = on ? "SPINNING" : "SPIN";
+  $$("#modes button").forEach(b => b.disabled = on);
+}
+async function spin(){
+  if (State.spinning) return;
+  Sfx.init();
+  const {req, err} = buildRequest(); if (err){ setMsg(err); Sfx.error(); return; }
+  if (!Backend.user){ openModal("#authModal"); toast("Sign in to grab your free coins and play!"); return; }
+  if (Backend.balance < Backend.spinCost){ setMsg(`Out of coins! A spin costs ${Backend.spinCost}.`); Sfx.error(); openModal("#storeModal"); return; }
+  setMsg(""); lockUI(true); $("#machine").classList.remove("jackpot");
+  const lever = $("#lever"), btn = $("#spin");
+  lever.classList.remove("pull"); void lever.offsetWidth; lever.classList.add("pull"); Sfx.lever();
+  btn.classList.add("pressed"); setTimeout(() => btn.classList.remove("pressed"), 160);
+  setReadout("GOOD LUCK", "\u00b7 \u00b7 \u00b7", false, false);
+  let resp;
+  try { [resp] = await Promise.all([Backend.spin(req), sleep(reduced ? 60 : 260)]); }
+  catch(e){
+    lockUI(false); Sfx.error(); App.onBalance(false);
+    if (e.code === "insufficient_funds"){ setMsg("Out of coins!"); openModal("#storeModal"); } else setMsg("Spin failed: " + e.message);
+    setReadout("TILT", "TRY AGAIN", true, false); return;
+  }
+  App.onBalance(true);
+  const pr = present(req, resp.result);
+  State.last = {mode:req.mode, req, result:resp.result, display:pr.value, tier:pr.tier};
+  reels.forEach(r => r.el.classList.remove("landed", "dim", "tension"));
+  Sfx.whirStart();
+  const N = reels.length;
+  const base = reduced ? 450 : ({list:2900, coin:1900}[req.mode] || 1350), stag = reduced ? 110 : (req.mode === "dice" ? 320 : 400);
+  let landed = 0, lastTick = 0;
+  await Promise.all(reels.map((r, i) => {
+    const extra = i === N - 1 && pr.tension ? (reduced ? 350 : 1500) : 0;
+    const travel = (reduced ? 5 : (req.mode === "list" ? Math.max(24, r.n*2) : 16)) + i*(reduced ? 2 : 5) + Math.floor(extra/90);
+    if (extra) setTimeout(() => { if (State.spinning){ r.el.classList.add("tension"); Sfx.drumroll(extra/1000 + .3); } }, base + (i - 1)*stag);
+    return r.spin(pr.targets[i], {
+      duration: base + i*stag + extra + Math.random()*120, travel,
+      onTick: v => { const now = performance.now(); if (now - lastTick > 38 && v < 2.2){ lastTick = now; Sfx.tick(i); } },
+      onLand: () => {
+        landed++; r.el.classList.remove("tension", "landed"); void r.el.offsetWidth; r.el.classList.add("landed");
+        Sfx.stop(i); Sfx.whirLevel(1 - landed/N); if (landed === N) Sfx.whirStop();
+        const b = r.el.getBoundingClientRect(); FX.sparks(b.left + b.width/2, b.top + b.height/2, 14, 45, 4);
+      }
+    });
+  }));
+  Sfx.whirStop();
+  if (req.mode === "number"){
+    const off = pr.sign ? 1 : 0;
+    for (let i = 0; i < pr.dimLead; i++) reels[off + i].el.classList.add("dim");
+    if (pr.sign && !pr.neg) reels[0].el.classList.add("dim");
+  }
+  celebrate(pr);
+  pushHistory({mode:req.mode, text:pr.chip, full:pr.full || pr.value, tier:pr.tier});
+  State.spins++; lockUI(false);
+  if (pr.winner && $("#removeWinner").checked){
+    setTimeout(() => {
+      if (State.spinning) return; const names = parseNames(), k = names.indexOf(pr.winner);
+      if (k >= 0){ names.splice(k, 1); $("#names").value = names.join("\n"); updateNameCount(); if (State.mode === "list") reels[0].setSymbols(names.length ? names : ["add names!"]); }
+    }, 1400);
+  }
+}
+function celebrate(pr){
+  const jack = pr.tier === "jackpot", w = $("#window").getBoundingClientRect(), cx = w.left + w.width/2, cy = w.top + w.height/2;
+  setReadout(jack ? "JACKPOT!" : pr.label, pr.value, true, jack);
+  if (jack){
+    const m = $("#machine"); m.classList.add("jackpot"); setTimeout(() => m.classList.remove("jackpot"), 3600);
+    flash("rainbow"); shake("quake"); Sfx.jackpot(); banner("JACKPOT!", "jackpot", pr.reason);
+    FX.confetti(cx, cy, 160, 1.4); FX.coins(110);
+    if (!reduced) for (let i = 0; i < 7; i++) setTimeout(() => FX.firework(innerWidth*(.15 + Math.random()*.7), innerHeight*(.12 + Math.random()*.4)), 250 + i*330);
+  } else if (pr.tier === "big"){
+    flash(); shake(); Sfx.big(); banner(pr.reason, "big", pr.winner || "");
+    FX.confetti(cx, cy, 120, 1.15); FX.sparks(cx, cy, 50, 300, 8);
+  } else {
+    shake(); Sfx.win(); FX.confetti(cx, cy, 70, 1); FX.sparks(cx, cy, 30, 190, 6);
+  }
+}
+
+/* ---------------- Wiring ---------------- */
+$("#spin").addEventListener("click", spin);
+$("#lever").addEventListener("click", spin);
+$$("#modes button").forEach(b => b.addEventListener("click", () => { Sfx.init(); Sfx.click(); setMode(b.dataset.mode); }));
+$("#clearHist").onclick = () => { hist = []; LS.set("slots-history", hist); renderHistory(); };
+function syncMute(){ const m = Sfx.muted, b = $("#muteBtn"); b.textContent = m ? "SOUND OFF" : "SOUND ON"; b.setAttribute("aria-pressed", String(m)); }
+$("#muteBtn").onclick = () => { Sfx.init(); Sfx.setMuted(!Sfx.muted); syncMute(); Sfx.click(); };
+let rebuildT; const rebuildSoon = (ms=250) => { clearTimeout(rebuildT); rebuildT = setTimeout(() => { if (!State.spinning) buildReels(); }, ms); };
+["#min", "#max"].forEach(s => {
+  $(s).addEventListener("input", () => { LS.set("slots-range", [$("#min").value, $("#max").value]); if (State.mode === "number") rebuildSoon(); });
+  $(s).addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); spin(); } });
+});
+function updateNameCount(){ const n = parseNames().length; $("#nameCount").textContent = `${n} entr${n === 1 ? "y" : "ies"}`; LS.set("slots-names", $("#names").value); }
+$("#names").addEventListener("input", () => { updateNameCount(); if (State.mode === "list") rebuildSoon(300); });
+$("#diceN").addEventListener("change", () => { LS.set("slots-dice", $("#diceN").value); if (!State.spinning) buildReels(); });
+addEventListener("keydown", e => {
+  if (e.code !== "Space" && e.key !== " ") return;
+  const t = e.target, tag = (t.tagName || "").toLowerCase();
+  if (tag === "textarea" || tag === "select" || (tag === "input" && t.type !== "checkbox") || $(".modal.open")) return;
+  e.preventDefault(); if (!e.repeat) spin();
+});
+addEventListener("keyup", e => { if ((e.code === "Space" || e.key === " ") && (e.target.tagName || "").toLowerCase() === "button" && !$(".modal.open")) e.preventDefault(); });
+let rsT; addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(() => { reels.forEach(r => r.measure()); layoutBulbs(); }, 120); });
+if (window.ResizeObserver) new ResizeObserver(() => layoutBulbs()).observe($("#machine"));
+
+/* Read-only hook for automated tests. */
+window.__slots = { spin, setMode, randInt,
+  get state(){ return {spinning:State.spinning, last:State.last, mode:State.mode, history:hist.slice(), balance:Backend.balance, user:Backend.user, backend:Backend.kind, particles:FX.count(), reels:reels.map(r => String(r.symbols[mod(Math.round(r.p), r.n)]))}; } };
+
+(async function boot(){
+  const range = LS.get("slots-range", null); if (range){ $("#min").value = range[0]; $("#max").value = range[1]; }
+  const names = LS.get("slots-names", null); if (names) $("#names").value = names;
+  const dice = LS.get("slots-dice", null); if (dice) $("#diceN").value = dice;
+  $("#startCoins").textContent = CFG.STARTING_BALANCE;
+  $("#authDemoNote").textContent = Backend.kind === "demo" ? "Demo mode: no real accounts. This makes a pretend player stored only in this browser." : "We only use your name and email to keep your coin balance.";
+  if (Backend.kind === "live") $("#srvNote").textContent = " on the server";
+  syncMute(); updateNameCount(); Bg.reset(); renderHistory();
+  setMode(["number", "list", "coin", "dice"].includes(State.mode) ? State.mode : "number");
+  layoutBulbs();
+  try { await Backend.init(); } catch(e){ console.warn("backend init failed", e); }
+  App.renderAccount(); App.onBalance(false);
+  $("#costLbl").textContent = `${Backend.spinCost} COINS`;
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { reels.forEach(r => r.measure()); layoutBulbs(); });
+})();
+</script>
+</body>
+</html>
