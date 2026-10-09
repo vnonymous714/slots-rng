@@ -448,6 +448,27 @@ body.app .toast.show{transform:translate(-50%,0)}
 @keyframes ribbonGlow{from{opacity:.25}to{opacity:1}}
 @media (prefers-reduced-motion:reduce){.pack .ribbon::after{animation:none;opacity:.7}}
 .pack .bonusAmt{display:block;margin-top:3px;font:900 11px/1.1 system-ui;font-style:normal;color:#5dff9e}
+/* ---- progressive jackpot panel (row in portrait, column beside the reels in landscape) ---- */
+.jackpots{display:flex;gap:6px}
+.jp{flex:1;min-width:0;position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 6px 5px;border-radius:12px;
+  background:linear-gradient(180deg,#2a0a4e,#12022a);box-shadow:inset 0 0 0 2px var(--jc)}
+.jp small{font:900 9px/1 system-ui;letter-spacing:.2em;color:var(--jc)}
+.jp .odo{display:inline-flex;height:1.15em;line-height:1.15em;overflow:hidden;font:900 14px/1.15 ui-monospace,Menlo,monospace;color:#fff;font-variant-numeric:tabular-nums}
+.jp.mega{--jc:#ffcf4a}.jp.mega .odo{color:#ffe9a0;font-size:16px}
+.jp.wow{--jc:#ff5cd6}.jp.mini{--jc:#21f3ff}
+.jp::after{content:"";position:absolute;inset:-3px;border-radius:14px;box-shadow:0 0 0 3px var(--jc),0 0 26px 6px var(--jc);opacity:0;pointer-events:none}
+.jp.hit::after{animation:jpHit .4s steps(2) 7}
+@keyframes jpHit{0%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.jp.hit::after{animation:none;opacity:.8}}
+@media (orientation:landscape) and (max-height:600px){
+  .game{grid-template-columns:clamp(86px,14vw,124px) minmax(0,1fr) clamp(172px,24vw,190px);
+    grid-template-areas:"hud hud sub" "jp reels ctrl" "jp win ctrl"}
+  .jackpots{grid-area:jp;flex-direction:column;justify-content:center;gap:8px}
+  .jp{flex:none;padding:7px 4px}
+  .jp.mega{padding:10px 4px}
+  .jp .odo{font-size:clamp(11px,1.9vw,15px)}
+  .jp.mega .odo{font-size:clamp(13px,2.3vw,18px)}
+}
 </style>
 </head>
 <body class="app">
@@ -501,6 +522,11 @@ body.app .toast.show{transform:translate(-50%,0)}
     <button class="pill" id="miniBtn">MINI GAMES</button>
     <button class="pill" id="infoBtn" aria-label="Paytable and rules">PAYTABLE</button>
   </nav>
+  <aside class="jackpots" id="jackpots" aria-label="Jackpots">
+    <div class="jp mega" id="jpMegaBox"><small>MEGA</small><b class="odo" id="jpMega">500.00</b></div>
+    <div class="jp wow" id="jpWowBox"><small>WOW</small><b class="odo" id="jpWow">5.00</b></div>
+    <div class="jp mini" id="jpMiniBox"><small>MINI</small><b class="odo" id="jpMini">1.00</b></div>
+  </aside>
   <main class="reelzone" id="reelzone">
     <div class="logo" id="logo" aria-hidden="true"><span class="lt" data-t="LUCKY COSMOS">LUCKY <b>COSMOS</b></span><small>10 LINES &middot; WILDS &middot; LIGHT THE SUITS</small></div>
     <div class="suitsign" id="suitSign" aria-label="Suit sign: win with each suit to light it"><span data-s="S"><svg viewBox="0 0 100 100"><use href="#s-s"/></svg></span><span data-s="H"><svg viewBox="0 0 100 100"><use href="#s-h"/></svg></span><span data-s="D"><svg viewBox="0 0 100 100"><use href="#s-d"/></svg></span><span data-s="C"><svg viewBox="0 0 100 100"><use href="#s-c"/></svg></span></div>
@@ -675,7 +701,7 @@ Player 6</textarea>
   <filter id="mb5"><feGaussianBlur stdDeviation="0 12"/></filter>
 </svg>
 
-<script src="config.js?v=202610090115"></script>
+<script src="config.js?v=202610090124"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -1006,10 +1032,15 @@ const SlotEngine = (() => {
   const SUITS = ["S", "H", "D", "C"], SIGN_FULL = 15;
   // Pays per LINE BET for 3 / 4 of a kind (left to right).
   const PAYTABLE = {
-    S: [45, 160], D: [30, 120], H: [22, 90], C: [17, 70],
-    s: [ 8,  30], d: [ 7,  24], h: [ 5, 18], c: [ 4, 15]
+    S: [45, 160], D: [30, 120], H: [22, 90], C: [16, 65],
+    s: [ 8,  30], d: [ 6,  24], h: [ 5, 18], c: [ 4, 15]
   };
   const SIGN_FREE_SPINS = 10;
+  // Jackpots (paid spins only), one draw per spin from [0, JP_ROLL):
+  //   MEGA: progressive. Chance = totalBet / JP_ROLL (scales with bet). Seed = 10x max bet; every paid bet adds 1%
+  //         to the pool (pool kept in 1/100 units: pool_x100 += totalBet). Paid from the pool by the backend, then reset to seed.
+  //   WOW: fixed 50x total bet, 1 in 10,000.   MINI: fixed 10x total bet, 1 in 1,000.
+  const JP_ROLL = 1000000000, JP = { MINI_MULT: 10, WOW_MULT: 50, MINI_ODDS: 1000, WOW_ODDS: 10000, MEGA_SEED: 0, MEGA_RATE: 0.01 };
   const FS_MULTIPLIER = 2, WILD_MULTIPLIER = 2, MAX_FREE_SPINS = 100;
   const PAYLINES = [
     [1,1,1,1],[0,0,0,0],[2,2,2,2],[0,1,1,0],[2,1,1,2],
@@ -1039,6 +1070,7 @@ const SlotEngine = (() => {
     return strip;
   }
   const STRIPS = COUNTS.map((c, i) => buildStrip(c, 0x51075 + i*7919));
+  JP.MEGA_SEED = 10 * BET_STEPS[BET_STEPS.length - 1] * LINES;   // 10x max total bet
   function levelForXp(xp){ let lvl = 1; while (xp >= xpForLevel(lvl + 1)) lvl++; return lvl; }
   function xpForLevel(lvl){ return lvl <= 1 ? 0 : Math.round(400 * Math.pow(lvl - 1, 1.6)); }
   function maxBetIndex(level){ let m = 0; BET_UNLOCK.forEach((need, i) => { if (level >= need) m = i; }); return m; }
@@ -1067,8 +1099,16 @@ const SlotEngine = (() => {
     const complete = lit === SIGN_FULL;
     const fsAward = complete ? SIGN_FREE_SPINS : 0;
     const lineWin = lines.reduce((a, l) => a + l.win, 0);
-    return { version: VERSION, stops, grid, lines, lineWin, sign: {before, lit, newly, complete, after: complete ? 0 : lit},
-             fsAward, totalWin: lineWin, lineBet, totalBet, free, multiplier: mult };
+    let jackpot = null;
+    if (!free){
+      const r = rng(JP_ROLL), megaCut = totalBet, wowCut = megaCut + JP_ROLL/JP.WOW_ODDS, miniCut = wowCut + JP_ROLL/JP.MINI_ODDS;
+      if (r < megaCut) jackpot = {kind: "MEGA", amount: 0};                       // amount = pool, filled in at settlement
+      else if (r < wowCut) jackpot = {kind: "WOW", amount: JP.WOW_MULT * totalBet};
+      else if (r < miniCut) jackpot = {kind: "MINI", amount: JP.MINI_MULT * totalBet};
+    }
+    const jpWin = jackpot ? jackpot.amount : 0;
+    return { version: VERSION, stops, grid, lines, lineWin, jackpot, sign: {before, lit, newly, complete, after: complete ? 0 : lit},
+             fsAward, totalWin: lineWin + jpWin, lineBet, totalBet, free, multiplier: mult };
   }
   function tier(win, totalBet){ const x = win/totalBet; return x >= 50 ? "epic" : x >= 25 ? "mega" : x >= 10 ? "big" : win > 0 ? "win" : ""; }
   // Daily wheel: 12 segments (coins scale with level). Weights sum to 100.
@@ -1083,7 +1123,7 @@ const SlotEngine = (() => {
   }
   const TIMED_BONUS_MS = 3 * 3600 * 1000;
   function timedBonusCoins(level){ return 1000 + 100 * Math.min(90, level - 1); }
-  return { VERSION, REELS, ROWS, LINES, SYMBOLS, SUITS, SIGN_FULL, PAYTABLE, SIGN_FREE_SPINS, FS_MULTIPLIER, WILD_MULTIPLIER, MAX_FREE_SPINS,
+  return { VERSION, JP, JP_ROLL, REELS, ROWS, LINES, SYMBOLS, SUITS, SIGN_FULL, PAYTABLE, SIGN_FREE_SPINS, FS_MULTIPLIER, WILD_MULTIPLIER, MAX_FREE_SPINS,
            PAYLINES, BET_STEPS, BET_UNLOCK, STRIPS, COUNTS, spin, tier, levelForXp, xpForLevel, maxBetIndex, WHEEL, wheelSpin,
            TIMED_BONUS_MS, timedBonusCoins, mulberry32 };
 })();
@@ -1202,6 +1242,9 @@ function applySlotSpin(st, betIndex, rng){
   }
   const r = E.spin(rng, {lineBet, free:freeRound, sign:st.sign | 0});
   st.sign = r.sign.after;
+  if (st.jp == null) st.jp = E.JP.MEGA_SEED*100;              // demo: per-player MEGA pool (1/100 units)
+  if (!freeRound){ st.jp += r.totalBet;                       // 1% of the bet feeds the pool
+    if (r.jackpot && r.jackpot.kind === "MEGA"){ r.jackpot.amount = Math.floor(st.jp/100); r.totalWin += r.jackpot.amount; st.jp = E.JP.MEGA_SEED*100; } }
   if (!freeRound) st.balance -= r.totalBet;
   st.balance += r.totalWin;
   if (freeRound){
@@ -1214,7 +1257,7 @@ function applySlotSpin(st, betIndex, rng){
     if (after > before){ let reward = 0; for (let l = before + 1; l <= after; l++) reward += LEVEL_REWARD(l); st.level = after; st.balance += reward;
       levelUp = {from:before, to:after, reward, maxBetIndex:E.maxBetIndex(after)}; }
   }
-  return {result:r, balance:st.balance, xp:st.xp, level:st.level, levelUp, fs:Object.assign({}, st.fs), free:freeRound, sign:st.sign};
+  return {result:r, balance:st.balance, xp:st.xp, level:st.level, levelUp, fs:Object.assign({}, st.fs), free:freeRound, sign:st.sign, jackpotPool:st.jp};
 }
 
 class DemoBackend {
@@ -1227,6 +1270,7 @@ class DemoBackend {
   get level(){ return this.s ? this.s.level : 1; }
   get fs(){ return this.s ? this.s.fs : {left:0, lineBet:1, total:0, awarded:0}; }
   get sign(){ return this.s ? this.s.sign | 0 : 0; }
+  get jackpotPool(){ return this.s && this.s.jp != null ? this.s.jp : E.JP.MEGA_SEED*100; }
   wheelAvailable(){ return !!this.s && (!this.s.lastWheel || utcDay(this.s.lastWheel) !== utcDay(Date.now())); }
   timedReadyAt(){ return this.s ? (this.s.lastTimed ? new Date(this.s.lastTimed).getTime() + E.TIMED_BONUS_MS : 0) : Infinity; }
   async signIn(provider){
@@ -1274,6 +1318,7 @@ class SupabaseBackend {
     }
     if (this.session){ try { await this.loadProfile(); } catch(e){ this.clear(); } }
     try { const p = await this.j("/rest/v1/coin_packs?select=id,coins,bonus_credits,price_cents,label&active=is.true&order=sort", {headers:this.headers(false)}); if (p && p.length) this.packs = p; } catch(e){}
+    this.loadJackpot();
     const qs = new URLSearchParams(location.search);
     if (qs.get("checkout")){ const ok = qs.get("checkout") === "success"; window.history.replaceState(null, "", location.pathname); if (ok){ toast("Payment received, adding credits..."); this.pollBalance(); } else toast("Checkout canceled. No charge."); }
   }
@@ -1300,11 +1345,13 @@ class SupabaseBackend {
   get level(){ return this.profile ? this.profile.level : 1; }
   get fs(){ return this.profile ? this.profile.fs : {left:0, lineBet:1, total:0, awarded:0}; }
   get sign(){ return this.profile ? this.profile.sign | 0 : 0; }
+  get jackpotPool(){ return this.jp != null ? this.jp : E.JP.MEGA_SEED*100; }
+  async loadJackpot(){ try { const r = await this.j("/rest/v1/jackpot?select=pool_x100&id=eq.1", {headers:this.headers(false)}); if (r && r[0]) this.jp = Number(r[0].pool_x100); } catch(e){} }
   wheelAvailable(){ return !!this.profile && (!this.profile.lastWheel || utcDay(this.profile.lastWheel) !== utcDay(Date.now())); }
   timedReadyAt(){ return this.profile ? (this.profile.lastTimed ? new Date(this.profile.lastTimed).getTime() + E.TIMED_BONUS_MS : 0) : Infinity; }
   async signIn(provider){ location.href = `${this.url}/auth/v1/authorize?provider=${encodeURIComponent(provider)}&redirect_to=${encodeURIComponent(location.origin + location.pathname)}`; return new Promise(() => {}); }
   async signOut(){ try { await this.authed(); await fetch(this.url + "/auth/v1/logout", {method:"POST", headers:this.headers()}); } catch(e){} this.clear(); }
-  apply(d){ const p = this.profile; p.balance = Number(d.balance); if (d.xp != null) p.xp = Number(d.xp); if (d.level != null) p.level = Number(d.level); if (d.fs) p.fs = d.fs; if (d.sign != null) p.sign = Number(d.sign); }
+  apply(d){ const p = this.profile; p.balance = Number(d.balance); if (d.xp != null) p.xp = Number(d.xp); if (d.level != null) p.level = Number(d.level); if (d.fs) p.fs = d.fs; if (d.sign != null) p.sign = Number(d.sign); if (d.jackpotPool) this.jp = Number(d.jackpotPool); }
   async slotSpin(betIndex){ await this.authed(); const d = await this.j("/functions/v1/spin", {method:"POST", headers:this.headers(), body:JSON.stringify({mode:"slots", betIndex})}); this.apply(d); return d; }
   async claimWheel(){ await this.authed(); const d = await this.j("/functions/v1/bonus", {method:"POST", headers:this.headers(), body:JSON.stringify({type:"wheel"})}); this.apply(d); this.profile.lastWheel = new Date().toISOString(); return d; }
   async claimTimed(){ await this.authed(); const d = await this.j("/functions/v1/bonus", {method:"POST", headers:this.headers(), body:JSON.stringify({type:"timed"})}); this.apply(d); this.profile.lastTimed = new Date().toISOString(); return d; }
@@ -1639,6 +1686,16 @@ const Sign = (() => {
   }
   return { set, reveal };
 })();
+/* Jackpot panel: MEGA = progressive pool (rolls up as bets feed it), WOW / MINI = fixed multiples of the current bet. */
+const Jackpots = (() => {
+  let pool = null, bet = null;
+  function show(p, totalBet, ms=700){
+    if (p != null && p !== pool){ const first = pool == null; pool = p; odoSet($("#jpMega"), fmt(Math.floor(pool/100)), first ? 0 : ms); }
+    if (totalBet != null && totalBet !== bet){ bet = totalBet; odoSet($("#jpWow"), fmt(E.JP.WOW_MULT*bet), 0); odoSet($("#jpMini"), fmt(E.JP.MINI_MULT*bet), 0); }
+  }
+  async function hit(kind){ const b = $(`#jp${kind[0] + kind.slice(1).toLowerCase()}Box`); if (!b) return; b.classList.remove("hit"); void b.offsetWidth; b.classList.add("hit"); setTimeout(() => b.classList.remove("hit"), 3000); }
+  return { show, hit, get pool(){ return pool; } };
+})();
 const Slots = (() => {
   const win = $("#slotwin"), svgLines = $("#lines");
   let reelsS = [], betIdx = LS.get("slots-bet", 0), turbo = !!LS.get("slots-turbo", false);
@@ -1675,7 +1732,7 @@ const Slots = (() => {
   const setDis = (el, v) => { if (el.disabled !== v) el.disabled = v; };
   function renderBet(){
     if (betIdx > maxIdx()) betIdx = maxIdx();
-    setText($("#betTotal"), fmt(totalBet()));
+    setText($("#betTotal"), fmt(totalBet())); Jackpots.show(null, totalBet());
     const fs = Backend.fs.left > 0, lock = spinning || presenting || autoActive || fs;
     setDis($("#betDown"), lock || betIdx <= 0); setDis($("#betUp"), lock); setDis($("#maxBet"), lock || betIdx === maxIdx());
     if ($("#game").classList.contains("fs") !== fs){ $("#game").classList.toggle("fs", fs); requestAnimationFrame(() => size()); }
@@ -1777,6 +1834,7 @@ const Slots = (() => {
     spinning = true; hurry = false; lastResult = null; spinStartT = performance.now(); renderBet();
     $("#slotSpin").classList.add("busy");
     balAdj = free ? 0 : -totalBet(); App.syncBalance(true);
+    if (!free && Jackpots.pool != null) Jackpots.show(Jackpots.pool + totalBet());   // this bet's 1% slice ticks the MEGA pool up
     setWinbar(free ? `FREE SPIN \u00b7 ${Backend.fs.left} LEFT` : "GOOD LUCK!", null, false);
     const speed = turbo ? 30 : 22;
     Sfx.lever(); Sfx.whirStart();
@@ -1813,18 +1871,24 @@ const Slots = (() => {
     continueRun(res);
   }
   async function present(resp){
-    const res = resp.result, tierName = E.tier(res.totalWin, res.totalBet);
-    if (res.totalWin > 0){
+    const res = resp.result, tierName = E.tier(res.lineWin, res.totalBet);
+    if (res.lineWin > 0){
       showAllWins(res);
       const lbl = res.free ? "FREE SPIN WIN x2" : res.lines.some(l => l.wild) ? "WILD WIN!" : "WIN";
       setWinbar(lbl, tierName === "win" ? 0 : null); const amtEl = $("#winAmt");
-      if (tierName === "win"){ Sfx.win(); await countUp(amtEl, res.totalWin, turbo ? 350 : 800, false); }
+      if (tierName === "win"){ Sfx.win(); await countUp(amtEl, res.lineWin, turbo ? 350 : 800, false); }
       else {
         Sfx[tierName === "epic" ? "jackpot" : "big"]();
-        await overlay(tierName, {big:"BIG WIN", mega:"MEGA WIN", epic:"EPIC WIN"}[tierName], res.totalWin, `${(res.totalWin/res.totalBet).toFixed(1)}\u00d7 your bet`);
-        amtEl.textContent = fmt(res.totalWin);
+        await overlay(tierName, {big:"BIG WIN", mega:"MEGA WIN", epic:"EPIC WIN"}[tierName], res.lineWin, `${(res.lineWin/res.totalBet).toFixed(1)}\u00d7 your bet`);
+        amtEl.textContent = fmt(res.lineWin);
       }
     } else setWinbar(Backend.fs.left > 0 ? `${Backend.fs.left} FREE SPINS LEFT` : "SPIN AGAIN", null, false);
+    if (res.jackpot){
+      const jk = res.jackpot.kind; Jackpots.hit(jk); Sfx.jackpot();
+      await overlay({MEGA:"epic", WOW:"mega", MINI:"big"}[jk], `${jk} JACKPOT`, res.jackpot.amount, jk === "MEGA" ? "The progressive pool is yours!" : `${jk === "WOW" ? E.JP.WOW_MULT : E.JP.MINI_MULT}\u00d7 your bet`, autoActive ? 4000 : 7000);
+      setWinbar("TOTAL WIN", res.totalWin, true);
+    }
+    if (resp.jackpotPool != null) Jackpots.show(Number(resp.jackpotPool), null, res.jackpot && res.jackpot.kind === "MEGA" ? 0 : 700);
     balAdj = 0; App.syncBalance(res.totalWin > 0); App.renderXp(); renderBet();
     if (resp.levelUp){
       const lu = resp.levelUp; Sfx.kaching(); burstAt($("#lvlBadge"), 26);
@@ -1977,7 +2041,9 @@ window.__slots = { spin, setMode, randInt, slot:Slots, engine:E,
   $("#authDemoNote").textContent = Backend.kind === "demo" ? "Demo mode: no real accounts. This makes a pretend player stored only in this browser." : "We only use your name and email to keep your credit balance.";
   syncMute(); updateNameCount(false); Bg.reset(); renderHistory();
   try { await Backend.init(); } catch(e){ console.warn("backend init failed", e); }
-  App.refresh(false); Sign.set(Backend.sign); Slots.size(true);
+  App.refresh(false); Sign.set(Backend.sign); Jackpots.show(Backend.jackpotPool, Slots.totalBet()); Slots.size(true);
+  // live mode: the global MEGA pool grows from everyone's bets; refresh it now and then while visible and idle
+  if (Backend.kind === "live") setInterval(async () => { if (document.hidden || Slots.busy()) return; const before = Backend.jackpotPool; await Backend.loadJackpot(); if (Backend.jackpotPool !== before && Backend.jackpotPool > (Jackpots.pool || 0)) Jackpots.show(Backend.jackpotPool, null, 1200); }, 20000);
   // Landscape menu
   $("#menuBtn").onclick = () => openModal("#menuModal");
   $$("#menuModal [data-menu]").forEach(b => b.onclick = () => { closeModal($("#menuModal")); const k = b.dataset.menu;
