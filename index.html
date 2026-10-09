@@ -974,7 +974,7 @@ function banner(text, cls, sub=""){
   banner.t = setTimeout(() => b.classList.add("out"), life); banner.t2 = setTimeout(() => { b.className = ""; b.innerHTML = ""; }, life + 600);
 }
 function flash(kind="go"){ if (reduced) return; const f = $("#flash"); f.className = ""; void f.offsetWidth; f.className = kind; }
-function shake(sel="#machine"){ if (reduced) return; const m = $(sel); m.classList.remove("shake"); void m.offsetWidth; m.classList.add("shake"); setTimeout(() => m.classList.remove("shake"), 600); }
+function shake(kind="shake"){ if (reduced) return; const m = $("#machine"); if (!m) return; m.classList.remove("shake", "quake"); void m.offsetWidth; m.classList.add(kind); setTimeout(() => m.classList.remove(kind), 700); }
 let hist = LS.get("slots-history", []);
 function renderHistory(fresh=false){
   const tag = {number:"#", list:"L", coin:"C", dice:"D"};
