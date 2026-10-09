@@ -943,7 +943,7 @@ let rebuildT; const rebuildSoon = (ms=250) => { clearTimeout(rebuildT); rebuildT
   $(s).addEventListener("input", () => { LS.set("slots-range", [$("#min").value, $("#max").value]); if (State.mode === "number") rebuildSoon(); });
   $(s).addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); spin(); } });
 });
-function updateNameCount(){ const n = parseNames().length; $("#nameCount").textContent = `${n} entr${n === 1 ? "y" : "ies"}`; LS.set("slots-names", $("#names").value); }
+function updateNameCount(save=true){ const n = parseNames().length; $("#nameCount").textContent = `${n} entr${n === 1 ? "y" : "ies"}`; if (save) LS.set("slots-names", $("#names").value); }
 $("#names").addEventListener("input", () => { updateNameCount(); if (State.mode === "list") rebuildSoon(300); });
 $("#diceN").addEventListener("change", () => { LS.set("slots-dice", $("#diceN").value); if (!State.spinning) buildReels(); });
 addEventListener("keydown", e => {
@@ -962,12 +962,15 @@ window.__slots = { spin, setMode, randInt,
 
 (async function boot(){
   const range = LS.get("slots-range", null); if (range){ $("#min").value = range[0]; $("#max").value = range[1]; }
-  const names = LS.get("slots-names", null); if (names) $("#names").value = names;
+  const names = LS.get("slots-names", null);
+  // Older builds auto-saved the previous default list; discard that exact list so only user-typed lists persist.
+  const OLD_DEFAULT = ["Ri"+"cky","Mir"+"iam","Alex","Jordan","Sam","Taylor"].join("\n");
+  if (names === OLD_DEFAULT) LS.del("slots-names"); else if (names) $("#names").value = names;
   const dice = LS.get("slots-dice", null); if (dice) $("#diceN").value = dice;
   $("#startCoins").textContent = CFG.STARTING_BALANCE;
   $("#authDemoNote").textContent = Backend.kind === "demo" ? "Demo mode: no real accounts. This makes a pretend player stored only in this browser." : "We only use your name and email to keep your coin balance.";
   if (Backend.kind === "live") $("#srvNote").textContent = " on the server";
-  syncMute(); updateNameCount(); Bg.reset(); renderHistory();
+  syncMute(); updateNameCount(false); Bg.reset(); renderHistory();
   setMode(["number", "list", "coin", "dice"].includes(State.mode) ? State.mode : "number");
   layoutBulbs();
   try { await Backend.init(); } catch(e){ console.warn("backend init failed", e); }
