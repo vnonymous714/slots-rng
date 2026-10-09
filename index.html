@@ -209,7 +209,7 @@ textarea{font:600 15px/1.35 system-ui,sans-serif;min-height:96px;resize:vertical
   .bulb:nth-child(odd){background:#8a6a20;box-shadow:none}
   .machine.jackpot .bulbs{animation:none}
 }
-/* ================= Main 5x3 slot game ================= */
+/* ================= Main 4x3 slot game ================= */
 html,body{height:100%;overflow:hidden;overscroll-behavior:none;touch-action:manipulation}
 body.app{position:fixed;inset:0}
 button{touch-action:manipulation}
@@ -316,7 +316,7 @@ button{touch-action:manipulation}
 .rules b{color:#ffcf4a}
 .lines{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px}
 .lines .ln{padding:4px;border-radius:8px;background:rgba(255,255,255,.06);font:800 9px/1 system-ui;color:#cdb8ff;text-align:center}
-.lines .ln i{display:grid;grid-template:repeat(3,6px)/repeat(5,6px);gap:2px;justify-content:center;margin-bottom:3px}
+.lines .ln i{display:grid;grid-template:repeat(3,6px)/repeat(4,6px);gap:2px;justify-content:center;margin-bottom:3px}
 .lines .ln i b{background:#2b1752;border-radius:1px}.lines .ln i b.on{background:#ffcf4a}
 .choice{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
 .choice button{padding:14px 6px;font-size:16px}
@@ -383,7 +383,7 @@ body.app .toast.show{transform:translate(-50%,0)}
 /* ================= Landscape phones: full-screen frame, slim top bar, controls on the right ================= */
 @media (orientation:landscape) and (max-height:600px){
   .game{max-width:none;display:grid;column-gap:10px;row-gap:4px;
-    grid-template-columns:minmax(0,1fr) clamp(150px,22vw,190px);grid-template-rows:auto minmax(0,1fr) auto;
+    grid-template-columns:minmax(0,1fr) clamp(172px,24vw,190px);grid-template-rows:auto minmax(0,1fr) auto;
     grid-template-areas:"hud sub" "reels ctrl" "win ctrl";
     padding:calc(env(safe-area-inset-top) + 4px) max(10px,env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 4px) max(10px,env(safe-area-inset-left))}
   .hud{grid-area:hud;min-height:34px;gap:6px}
@@ -393,7 +393,8 @@ body.app .toast.show{transform:translate(-50%,0)}
   .xpwrap{max-width:240px}
   .subhud{grid-area:sub;align-self:center}
   #infoBtn,#miniBtn{display:none}
-  .subhud .pill{padding:8px 2px;font-size:10px}
+  .subhud{gap:4px}
+  .subhud .pill{padding:8px 3px;font-size:9.5px;letter-spacing:0}
   .reelzone{grid-area:reels;gap:4px}
   .logo{display:none!important}
   .winbar{grid-area:win;height:24px;font-size:11px}
@@ -410,6 +411,19 @@ body.app .toast.show{transform:translate(-50%,0)}
 }
 #fx{will-change:transform}
 .winbar b,#balNum{display:inline-block;min-width:3ch;text-align:center}
+/* ---- suit sign: 4 lamps across the top; opacity/transform only ---- */
+.suitsign{display:flex;justify-content:center;gap:clamp(8px,2.4vw,18px);margin:0 auto;padding:3px 14px;border-radius:999px;
+  background:linear-gradient(#1c0538,#0d0220);border:2px solid #6a2bb0;box-shadow:inset 0 0 0 1px rgba(255,207,74,.25);width:max-content}
+.suitsign span{position:relative;width:clamp(22px,4.2vh,32px);height:clamp(22px,4.2vh,32px);opacity:.26;transition:opacity .25s}
+.suitsign span svg{position:relative;width:100%;height:100%;display:block}
+.suitsign span::before{content:"";position:absolute;inset:-35%;border-radius:50%;background:radial-gradient(circle,rgba(255,230,140,.55),rgba(255,120,220,0) 65%);opacity:0;transition:opacity .25s}
+.suitsign span.on{opacity:1}.suitsign span.on::before{opacity:1}
+.suitsign span.pop{animation:lampPop .5s ease-out}
+@keyframes lampPop{0%{transform:scale(.6)}60%{transform:scale(1.3)}100%{transform:scale(1)}}
+.suitsign.full span::before{animation:lampFlash .26s steps(2) 5}
+@keyframes lampFlash{0%{opacity:1}100%{opacity:.15}}
+@media (prefers-reduced-motion:reduce){.suitsign span.pop,.suitsign.full span::before{animation:none}}
+@media (orientation:landscape) and (max-height:600px){ .suitsign{padding:2px 12px} .suitsign span{width:22px;height:22px} }
 </style>
 </head>
 <body class="app">
@@ -429,18 +443,20 @@ body.app .toast.show{transform:translate(-50%,0)}
     <linearGradient id="gK" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c8e4ff"/><stop offset="1" stop-color="#2a6bff"/></linearGradient>
     <linearGradient id="gQ" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c8ffe0"/><stop offset="1" stop-color="#00b36b"/></linearGradient>
     <linearGradient id="gJ" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe0c0"/><stop offset="1" stop-color="#ff7a00"/></linearGradient>
+    <linearGradient id="gSpade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d6dcff"/><stop offset=".5" stop-color="#5a62c8"/><stop offset="1" stop-color="#1c1f5a"/></linearGradient>
+    <linearGradient id="gHeart" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb0c4"/><stop offset=".5" stop-color="#ff2b55"/><stop offset="1" stop-color="#8a0024"/></linearGradient>
+    <radialGradient id="gCoin" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="#5a2a90"/><stop offset="1" stop-color="#1e0640"/></radialGradient>
+    <linearGradient id="gTile" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff4fd8"/><stop offset=".55" stop-color="#9b00a8"/><stop offset="1" stop-color="#4a0070"/></linearGradient>
   </defs>
-  <symbol id="s-7" viewBox="0 0 100 100"><path d="M20 14h62v14L56 88H34l26-58H20z" fill="url(#g7)" stroke="url(#gGold)" stroke-width="5" stroke-linejoin="round"/><path d="M26 19h48" stroke="#fff" stroke-opacity=".55" stroke-width="3" stroke-linecap="round"/></symbol>
-  <symbol id="s-D" viewBox="0 0 100 100"><path d="M18 38 34 16h32l16 22-32 50z" fill="url(#gDia)" stroke="#e9ffff" stroke-width="3" stroke-linejoin="round"/><path d="M18 38h64M34 16l8 22 8-22 8 22 8-22M42 38l8 50 8-50" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="2"/><circle cx="36" cy="26" r="3" fill="#fff"/></symbol>
-  <symbol id="s-B" viewBox="0 0 100 100"><path d="M50 12c-4 0-7 3-7 7-13 4-19 16-19 30v14l-9 11h70l-9-11V49c0-14-6-26-19-30 0-4-3-7-7-7z" fill="url(#gGold)" stroke="#8a5200" stroke-width="3" stroke-linejoin="round"/><circle cx="50" cy="82" r="8" fill="url(#gGold)" stroke="#8a5200" stroke-width="3"/><path d="M36 34c3-6 7-9 12-10" stroke="#fff" stroke-opacity=".7" stroke-width="4" stroke-linecap="round" fill="none"/></symbol>
-  <symbol id="s-L" viewBox="0 0 100 100"><path d="M52 58c4 14 2 24-6 32" stroke="#0b6b2a" stroke-width="6" stroke-linecap="round" fill="none"/><g fill="url(#gGreen)" stroke="#0b6b2a" stroke-width="3"><circle cx="37" cy="36" r="15"/><circle cx="63" cy="36" r="15"/><circle cx="37" cy="60" r="15"/><circle cx="63" cy="60" r="15"/></g><circle cx="50" cy="48" r="6" fill="#d8ffb0"/><circle cx="32" cy="31" r="4" fill="#fff" fill-opacity=".6"/></symbol>
-  <symbol id="s-C" viewBox="0 0 100 100"><path d="M34 56Q42 28 68 14M66 60Q62 34 68 14" stroke="#1a8a3a" stroke-width="5" stroke-linecap="round" fill="none"/><path d="M68 14c10-4 20 0 22 8-10 4-18 2-22-8z" fill="url(#gGreen)"/><circle cx="32" cy="68" r="17" fill="url(#gCherry)" stroke="#5a0016" stroke-width="2.5"/><circle cx="66" cy="72" r="17" fill="url(#gCherry)" stroke="#5a0016" stroke-width="2.5"/><circle cx="26" cy="62" r="4" fill="#fff" fill-opacity=".75"/><circle cx="60" cy="66" r="4" fill="#fff" fill-opacity=".75"/></symbol>
-  <symbol id="s-A" viewBox="0 0 100 100"><text x="50" y="80" text-anchor="middle" font-family="'Arial Black',Impact,system-ui,sans-serif" font-weight="900" font-size="74" fill="url(#gA)" stroke="#f0e6ff" stroke-width="3">A</text></symbol>
-  <symbol id="s-K" viewBox="0 0 100 100"><text x="50" y="80" text-anchor="middle" font-family="'Arial Black',Impact,system-ui,sans-serif" font-weight="900" font-size="74" fill="url(#gK)" stroke="#e6f2ff" stroke-width="3">K</text></symbol>
-  <symbol id="s-Q" viewBox="0 0 100 100"><text x="50" y="80" text-anchor="middle" font-family="'Arial Black',Impact,system-ui,sans-serif" font-weight="900" font-size="74" fill="url(#gQ)" stroke="#e6fff2" stroke-width="3">Q</text></symbol>
-  <symbol id="s-J" viewBox="0 0 100 100"><text x="50" y="80" text-anchor="middle" font-family="'Arial Black',Impact,system-ui,sans-serif" font-weight="900" font-size="74" fill="url(#gJ)" stroke="#fff2e6" stroke-width="3">J</text></symbol>
-  <symbol id="s-W" viewBox="0 0 100 100"><path d="M50 4l11 26 28-6-17 23 22 17-28 3 2 28-18-21-18 21 2-28-28-3 22-17-17-23 28 6z" fill="url(#gStar)" stroke="#fff3b0" stroke-width="3" stroke-linejoin="round"/><rect x="18" y="42" width="64" height="22" rx="7" fill="#3a0066" stroke="#ffcf4a" stroke-width="2.5"/><text x="50" y="59" text-anchor="middle" font-family="'Arial Black',Impact,system-ui,sans-serif" font-weight="900" font-size="17" fill="#fff3b0" letter-spacing="1">WILD</text></symbol>
-  <symbol id="s-S" viewBox="0 0 100 100"><ellipse cx="50" cy="44" rx="44" ry="11" fill="none" stroke="#bff8ff" stroke-width="5" transform="rotate(-16 50 44)" stroke-opacity=".55"/><circle cx="50" cy="42" r="26" fill="url(#gPlanet)" stroke="#ffe0f6" stroke-width="2.5"/><path d="M8 54Q50 34 92 32" fill="none" stroke="#bff8ff" stroke-width="5" stroke-linecap="round" transform="rotate(-4 50 44)"/><circle cx="41" cy="33" r="5" fill="#fff" fill-opacity=".7"/><rect x="16" y="72" width="68" height="20" rx="7" fill="#002a40" stroke="#21f3ff" stroke-width="2.5"/><text x="50" y="87.5" text-anchor="middle" font-family="'Arial Black',Impact,system-ui,sans-serif" font-weight="900" font-size="14" fill="#bff8ff" letter-spacing="1">BONUS</text></symbol>
+  <symbol id="s-s" viewBox="0 0 100 100"><g transform="translate(8 8) scale(.84)"><path d="M50 8C34 30 12 42 12 60c0 14 12 22 24 19 5-1 9-4 11-8l-5 21h16l-5-21c2 4 6 7 11 8 12 3 24-5 24-19 0-18-22-30-38-52z" fill="url(#gSpade)" stroke="#e8eeff" stroke-width="3" stroke-linejoin="round"/><path d="M34 46c4-8 9-14 14-20" stroke="#fff" stroke-opacity=".6" stroke-width="4" stroke-linecap="round" fill="none"/></g></symbol>
+  <symbol id="s-h" viewBox="0 0 100 100"><g transform="translate(8 8) scale(.84)"><path d="M50 88C22 68 9 52 10 35c1-13 11-22 24-22 8 0 13 4 16 11 3-7 8-11 16-11 13 0 23 9 24 22 1 17-12 33-40 53z" fill="url(#gHeart)" stroke="#ffe0e8" stroke-width="3" stroke-linejoin="round"/><path d="M24 30c2-6 7-9 12-9" stroke="#fff" stroke-opacity=".7" stroke-width="4" stroke-linecap="round" fill="none"/></g></symbol>
+  <symbol id="s-d" viewBox="0 0 100 100"><g transform="translate(8 8) scale(.84)"><path d="M14 38 32 14h36l18 24-36 52z" fill="url(#gDia)" stroke="#e9ffff" stroke-width="3" stroke-linejoin="round"/><path d="M14 38h72M32 14l9 24 9-24 9 24 9-24M41 38l9 52 9-52" fill="none" stroke="#fff" stroke-opacity=".65" stroke-width="2"/><circle cx="33" cy="25" r="3" fill="#fff"/></g></symbol>
+  <symbol id="s-c" viewBox="0 0 100 100"><g transform="translate(8 8) scale(.84)"><g fill="url(#gGreen)" stroke="#dcffd0" stroke-width="3" stroke-linejoin="round"><circle cx="50" cy="29" r="17"/><circle cx="29" cy="57" r="17"/><circle cx="71" cy="57" r="17"/><path d="M45 50h10l6 40H39z"/><circle cx="50" cy="51" r="9"/></g><circle cx="44" cy="22" r="4" fill="#fff" fill-opacity=".6"/></g></symbol>
+  <symbol id="s-S" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="url(#gCoin)" stroke="url(#gGold)" stroke-width="6"/><circle cx="50" cy="50" r="37" fill="none" stroke="#ffe9a0" stroke-opacity=".45" stroke-width="1.5"/><g transform="translate(19 19) scale(.62)"><path d="M50 8C34 30 12 42 12 60c0 14 12 22 24 19 5-1 9-4 11-8l-5 21h16l-5-21c2 4 6 7 11 8 12 3 24-5 24-19 0-18-22-30-38-52z" fill="url(#gSpade)" stroke="#e8eeff" stroke-width="3" stroke-linejoin="round"/><path d="M34 46c4-8 9-14 14-20" stroke="#fff" stroke-opacity=".6" stroke-width="4" stroke-linecap="round" fill="none"/></g></symbol>
+  <symbol id="s-H" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="url(#gCoin)" stroke="url(#gGold)" stroke-width="6"/><circle cx="50" cy="50" r="37" fill="none" stroke="#ffe9a0" stroke-opacity=".45" stroke-width="1.5"/><g transform="translate(19 19) scale(.62)"><path d="M50 88C22 68 9 52 10 35c1-13 11-22 24-22 8 0 13 4 16 11 3-7 8-11 16-11 13 0 23 9 24 22 1 17-12 33-40 53z" fill="url(#gHeart)" stroke="#ffe0e8" stroke-width="3" stroke-linejoin="round"/><path d="M24 30c2-6 7-9 12-9" stroke="#fff" stroke-opacity=".7" stroke-width="4" stroke-linecap="round" fill="none"/></g></symbol>
+  <symbol id="s-D" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="url(#gCoin)" stroke="url(#gGold)" stroke-width="6"/><circle cx="50" cy="50" r="37" fill="none" stroke="#ffe9a0" stroke-opacity=".45" stroke-width="1.5"/><g transform="translate(19 19) scale(.62)"><path d="M14 38 32 14h36l18 24-36 52z" fill="url(#gDia)" stroke="#e9ffff" stroke-width="3" stroke-linejoin="round"/><path d="M14 38h72M32 14l9 24 9-24 9 24 9-24M41 38l9 52 9-52" fill="none" stroke="#fff" stroke-opacity=".65" stroke-width="2"/><circle cx="33" cy="25" r="3" fill="#fff"/></g></symbol>
+  <symbol id="s-C" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="url(#gCoin)" stroke="url(#gGold)" stroke-width="6"/><circle cx="50" cy="50" r="37" fill="none" stroke="#ffe9a0" stroke-opacity=".45" stroke-width="1.5"/><g transform="translate(19 19) scale(.62)"><g fill="url(#gGreen)" stroke="#dcffd0" stroke-width="3" stroke-linejoin="round"><circle cx="50" cy="29" r="17"/><circle cx="29" cy="57" r="17"/><circle cx="71" cy="57" r="17"/><path d="M45 50h10l6 40H39z"/><circle cx="50" cy="51" r="9"/></g><circle cx="44" cy="22" r="4" fill="#fff" fill-opacity=".6"/></g></symbol>
+  <symbol id="s-W" viewBox="0 0 100 100"><rect x="6" y="14" width="88" height="72" rx="14" fill="url(#gTile)" stroke="url(#gGold)" stroke-width="5"/><rect x="13" y="21" width="74" height="58" rx="9" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="1.5"/><text x="50" y="62" text-anchor="middle" font-family="'Arial Black',Impact,system-ui,sans-serif" font-weight="900" font-size="27" fill="url(#gGold)" stroke="#5a0060" stroke-width="1.2" letter-spacing="1">WILD</text></symbol>
 </svg>
 
 <div class="game" id="game">
@@ -462,12 +478,13 @@ body.app .toast.show{transform:translate(-50%,0)}
     <button class="pill" id="infoBtn" aria-label="Paytable and rules">PAYTABLE</button>
   </nav>
   <main class="reelzone" id="reelzone">
-    <div class="logo" id="logo" aria-hidden="true"><span class="lt" data-t="LUCKY COSMOS">LUCKY <b>COSMOS</b></span><small>20 LINES &middot; WILDS &middot; FREE SPINS</small></div>
+    <div class="logo" id="logo" aria-hidden="true"><span class="lt" data-t="LUCKY COSMOS">LUCKY <b>COSMOS</b></span><small>10 LINES &middot; WILDS &middot; LIGHT THE SUITS</small></div>
+    <div class="suitsign" id="suitSign" aria-label="Suit sign: win with each suit to light it"><span data-s="S"><svg viewBox="0 0 100 100"><use href="#s-s"/></svg></span><span data-s="H"><svg viewBox="0 0 100 100"><use href="#s-h"/></svg></span><span data-s="D"><svg viewBox="0 0 100 100"><use href="#s-d"/></svg></span><span data-s="C"><svg viewBox="0 0 100 100"><use href="#s-c"/></svg></span></div>
     <div class="frame" id="frame">
       <div class="bulbs" id="sbulbs" aria-hidden="true"></div>
       <div class="slotwin" id="slotwin" aria-label="Slot reels"><svg id="lines" aria-hidden="true"></svg></div>
     </div>
-    <div class="fsbar" id="fsbar"><span>FREE SPINS <b id="fsLeft">0</b></span><span>ALL WINS x3</span><span>WON <b id="fsWon">0</b></span></div>
+    <div class="fsbar" id="fsbar"><span>FREE SPINS <b id="fsLeft">0</b></span><span>ALL WINS x2</span><span>WON <b id="fsWon">0</b></span></div>
   </main>
   <div class="winbar" id="winbar" aria-live="polite"><span id="winLbl">GOOD LUCK!</span><b id="winAmt"></b></div>
   <footer class="controls">
@@ -475,7 +492,7 @@ body.app .toast.show{transform:translate(-50%,0)}
       <div class="betrow"><button class="ibtn" id="betDown" aria-label="Lower bet">&minus;</button><div class="betval"><small>TOTAL BET</small><b id="betTotal">20</b></div><button class="ibtn" id="betUp" aria-label="Raise bet">+</button></div>
       <button class="maxbet" id="maxBet">MAX BET</button>
     </div>
-    <button class="spinbtn" id="slotSpin" aria-label="Spin">SPIN<small id="spinSub">20 LINES</small></button>
+    <button class="spinbtn" id="slotSpin" aria-label="Spin">SPIN<small id="spinSub">10 LINES</small></button>
     <div class="side">
       <button class="toggle" id="autoBtn" aria-pressed="false">AUTO</button>
       <button class="toggle" id="turboBtn" aria-pressed="false">TURBO</button>
@@ -633,7 +650,7 @@ Player 6</textarea>
   <filter id="mb5"><feGaussianBlur stdDeviation="0 12"/></filter>
 </svg>
 
-<script src="config.js?v=202610090048"></script>
+<script src="config.js?v=202610090109"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -898,89 +915,76 @@ class Reel {
 /* =====================================================================
    SlotEngine — pure game math shared by the browser (demo mode) and the
    Supabase "spin" Edge Function (live mode). No DOM, no I/O.
-   5 reels x 3 rows, 20 fixed paylines, wilds (reels 2-4, x2 line multiplier),
-   scatters (3+ anywhere: pays x total bet and awards free spins at x3).
+   4 reels x 3 rows, 10 fixed paylines (3 or 4 of a kind), wilds (reels 2-4, x2 line multiplier),
+   suit sign (win with each suit to light it; all 4 lit = 10 free spins at x2, then reset).
    ===================================================================== */
 const SlotEngine = (() => {
-  const VERSION = "cosmic-5x3-v1";
-  const REELS = 5, ROWS = 3, LINES = 20;
-  // Symbol ids. Art is original inline SVG in the page; names here are generic.
+  const VERSION = "suits-4x3-v1";
+  const REELS = 4, ROWS = 3, LINES = 10;
+  // Card-suit symbols. Uppercase = gold tier (high), lowercase = plain tier (low). Art is original inline SVG.
   const SYMBOLS = {
-    W: {name:"Wild Star",   kind:"wild"},
-    S: {name:"Bonus Planet",kind:"scatter"},
-    "7": {name:"Lucky Seven", kind:"high"},
-    D: {name:"Diamond",     kind:"high"},
-    B: {name:"Bell",        kind:"high"},
-    L: {name:"Clover",      kind:"mid"},
-    C: {name:"Cherries",    kind:"mid"},
-    A: {name:"A",           kind:"low"},
-    K: {name:"K",           kind:"low"},
-    Q: {name:"Q",           kind:"low"},
-    J: {name:"J",           kind:"low"}
+    W: {name:"Wild",          kind:"wild"},
+    S: {name:"Gold Spade",    kind:"high", suit:"S"},
+    D: {name:"Gold Diamond",  kind:"high", suit:"D"},
+    H: {name:"Gold Heart",    kind:"high", suit:"H"},
+    C: {name:"Gold Club",     kind:"high", suit:"C"},
+    s: {name:"Spade",         kind:"low",  suit:"S"},
+    d: {name:"Diamond",       kind:"low",  suit:"D"},
+    h: {name:"Heart",         kind:"low",  suit:"H"},
+    c: {name:"Club",          kind:"low",  suit:"C"}
   };
-  // Pays per LINE BET for 3 / 4 / 5 of a kind (left to right).
+  // Suit sign: bit order. Any winning line of a suit lights it; all 4 lit = free spins, then the sign resets.
+  const SUITS = ["S", "H", "D", "C"], SIGN_FULL = 15;
+  // Pays per LINE BET for 3 / 4 of a kind (left to right).
   const PAYTABLE = {
-    "7": [50, 250, 1000],
-    D:   [30, 120,  500],
-    B:   [25, 100,  300],
-    L:   [25,  75,  250],
-    C:   [20,  60,  200],
-    A:   [15,  40,  125],
-    K:   [12,  35,  100],
-    Q:   [10,  25,   80],
-    J:   [ 8,  20,   60]
+    S: [45, 160], D: [30, 120], H: [22, 90], C: [17, 70],
+    s: [ 8,  30], d: [ 7,  24], h: [ 5, 18], c: [ 4, 15]
   };
-  const SCATTER_PAY = {3: 2, 4: 10, 5: 50};      // x TOTAL bet
-  const FREE_SPINS  = {3: 10, 4: 15, 5: 20};
-  const FS_MULTIPLIER = 3, WILD_MULTIPLIER = 2, MAX_FREE_SPINS = 100;
+  const SIGN_FREE_SPINS = 10;
+  const FS_MULTIPLIER = 2, WILD_MULTIPLIER = 2, MAX_FREE_SPINS = 100;
   const PAYLINES = [
-    [1,1,1,1,1],[0,0,0,0,0],[2,2,2,2,2],[0,1,2,1,0],[2,1,0,1,2],
-    [0,0,1,2,2],[2,2,1,0,0],[1,0,0,0,1],[1,2,2,2,1],[1,0,1,2,1],
-    [1,2,1,0,1],[0,1,0,1,0],[2,1,2,1,2],[1,1,0,1,1],[1,1,2,1,1],
-    [0,1,1,1,0],[2,1,1,1,2],[0,2,0,2,0],[2,0,2,0,2],[1,0,2,0,1]
+    [1,1,1,1],[0,0,0,0],[2,2,2,2],[0,1,1,0],[2,1,1,2],
+    [1,0,0,1],[1,2,2,1],[0,1,2,2],[2,1,0,0],[1,0,1,2]
   ];
-  // Line-bet steps (total bet = step x 20 lines) and the level needed to unlock each.
+  // Line-bet steps (total bet = step x 10 lines) and the level needed to unlock each.
   const BET_STEPS   = [1, 2, 5, 10, 25, 50, 100, 250, 500];
   const BET_UNLOCK  = [1, 1, 1,  3,  6, 10,  15,  22,  30];
-  // Symbol counts per reel strip (tuned by simulation for ~94% RTP).
+  // Symbol counts per reel strip (tuned by simulation for ~93% RTP).
   const COUNTS = [
-    {"7":2, D:3, B:4, L:5, C:6, A:7, K:8, Q:9, J:10, S:2, W:0},
-    {"7":2, D:3, B:4, L:5, C:6, A:7, K:8, Q:9, J:10, S:2, W:2},
-    {"7":2, D:3, B:4, L:5, C:6, A:7, K:8, Q:9, J:10, S:2, W:2},
-    {"7":2, D:3, B:4, L:5, C:6, A:7, K:8, Q:9, J:10, S:2, W:2},
-    {"7":2, D:3, B:4, L:5, C:6, A:7, K:8, Q:9, J:10, S:2, W:0}
+    {S:1, D:3, H:4, C:5, s:4, d:8, h:9, c:10, W:0},
+    {S:1, D:3, H:4, C:5, s:4, d:8, h:9, c:10, W:2},
+    {S:1, D:3, H:4, C:5, s:4, d:8, h:9, c:10, W:2},
+    {S:1, D:3, H:4, C:5, s:4, d:8, h:9, c:10, W:2}
   ];
   // Deterministic strip layout (same on client and server): seeded shuffle, then
-  // spread specials so no reel can show two scatters/wilds in one 3-row window.
+  // spread wilds so no reel can show two wilds in one 3-row window.
   function mulberry32(a){ return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
   function buildStrip(counts, seed){
     const rnd = mulberry32(seed), regular = [], special = [];
-    for (const [s, n] of Object.entries(counts)) for (let i = 0; i < n; i++) (s === "S" || s === "W" ? special : regular).push(s);
+    for (const [s, n] of Object.entries(counts)) for (let i = 0; i < n; i++) (s === "W" ? special : regular).push(s);
     for (let i = regular.length - 1; i > 0; i--){ const j = Math.floor(rnd()*(i+1)); [regular[i], regular[j]] = [regular[j], regular[i]]; }
-    for (let i = special.length - 1; i > 0; i--){ const j = Math.floor(rnd()*(i+1)); [special[i], special[j]] = [special[j], special[i]]; }
     const len = regular.length + special.length, strip = regular.slice(), gap = len/Math.max(1, special.length);
     special.forEach((s, k) => strip.splice(Math.min(strip.length, Math.round(k*gap + gap/2)), 0, s));
-    // safety: verify spacing >= 3 between specials (cyclic)
-    const idx = strip.map((s, i) => (s === "S" || s === "W") ? i : -1).filter(i => i >= 0);
+    const idx = strip.map((s, i) => s === "W" ? i : -1).filter(i => i >= 0);
     for (let k = 0; k < idx.length; k++){ const a = idx[k], b = idx[(k+1) % idx.length] + (k+1 === idx.length ? len : 0); if (idx.length > 1 && b - a < 3) throw new Error("strip spacing"); }
     return strip;
   }
   const STRIPS = COUNTS.map((c, i) => buildStrip(c, 0x51075 + i*7919));
-
   function levelForXp(xp){ let lvl = 1; while (xp >= xpForLevel(lvl + 1)) lvl++; return lvl; }
   function xpForLevel(lvl){ return lvl <= 1 ? 0 : Math.round(400 * Math.pow(lvl - 1, 1.6)); }
   function maxBetIndex(level){ let m = 0; BET_UNLOCK.forEach((need, i) => { if (level >= need) m = i; }); return m; }
 
-  /** rng(n) must return a uniform integer in [0, n). opts: {lineBet, free:boolean} */
+  /** rng(n) must return a uniform integer in [0, n). opts: {lineBet, free:boolean, sign:0..15 (suit-sign bitmask before this spin)} */
   function spin(rng, opts){
     const lineBet = opts.lineBet, totalBet = lineBet * LINES, free = !!opts.free;
+    const before = (opts.sign | 0) & SIGN_FULL;
     const stops = STRIPS.map(s => rng(s.length));
     const grid = stops.map((st, r) => [0,1,2].map(k => STRIPS[r][(st + k) % STRIPS[r].length])); // grid[reel][row]
     const mult = free ? FS_MULTIPLIER : 1;
     const lines = [];
     PAYLINES.forEach((pl, li) => {
       const sym = grid[0][pl[0]];
-      if (sym === "S" || sym === "W") return;
+      if (sym === "W") return;
       let n = 1, wild = false;
       while (n < REELS){ const s = grid[n][pl[n]]; if (s === sym || s === "W"){ if (s === "W") wild = true; n++; } else break; }
       if (n < 3) return;
@@ -988,14 +992,14 @@ const SlotEngine = (() => {
       const win = PAYTABLE[sym][n - 3] * lineBet * wm * mult;
       lines.push({line: li, sym, count: n, wild, win, cells: pl.slice(0, n).map((row, reel) => [reel, row])});
     });
-    const scatterCells = [];
-    grid.forEach((col, reel) => col.forEach((s, row) => { if (s === "S") scatterCells.push([reel, row]); }));
-    const sc = scatterCells.length;
-    const scatterWin = sc >= 3 ? SCATTER_PAY[Math.min(5, sc)] * totalBet * mult : 0;
-    const fsAward = sc >= 3 ? FREE_SPINS[Math.min(5, sc)] : 0;
+    let lit = before;
+    lines.forEach(l => { lit |= 1 << SUITS.indexOf(SYMBOLS[l.sym].suit); });
+    const newly = SUITS.filter((s, i) => (lit & (1 << i)) && !(before & (1 << i)));
+    const complete = lit === SIGN_FULL;
+    const fsAward = complete ? SIGN_FREE_SPINS : 0;
     const lineWin = lines.reduce((a, l) => a + l.win, 0);
-    return { version: VERSION, stops, grid, lines, lineWin, scatter: {count: sc, cells: scatterCells, win: scatterWin},
-             fsAward, totalWin: lineWin + scatterWin, lineBet, totalBet, free, multiplier: mult };
+    return { version: VERSION, stops, grid, lines, lineWin, sign: {before, lit, newly, complete, after: complete ? 0 : lit},
+             fsAward, totalWin: lineWin, lineBet, totalBet, free, multiplier: mult };
   }
   function tier(win, totalBet){ const x = win/totalBet; return x >= 50 ? "epic" : x >= 25 ? "mega" : x >= 10 ? "big" : win > 0 ? "win" : ""; }
   // Daily wheel: 12 segments (coins scale with level). Weights sum to 100.
@@ -1010,7 +1014,7 @@ const SlotEngine = (() => {
   }
   const TIMED_BONUS_MS = 3 * 3600 * 1000;
   function timedBonusCoins(level){ return 1000 + 100 * Math.min(90, level - 1); }
-  return { VERSION, REELS, ROWS, LINES, SYMBOLS, PAYTABLE, SCATTER_PAY, FREE_SPINS, FS_MULTIPLIER, WILD_MULTIPLIER, MAX_FREE_SPINS,
+  return { VERSION, REELS, ROWS, LINES, SYMBOLS, SUITS, SIGN_FULL, PAYTABLE, SIGN_FREE_SPINS, FS_MULTIPLIER, WILD_MULTIPLIER, MAX_FREE_SPINS,
            PAYLINES, BET_STEPS, BET_UNLOCK, STRIPS, COUNTS, spin, tier, levelForXp, xpForLevel, maxBetIndex, WHEEL, wheelSpin,
            TIMED_BONUS_MS, timedBonusCoins, mulberry32 };
 })();
@@ -1127,7 +1131,8 @@ function applySlotSpin(st, betIndex, rng){
     lineBet = E.BET_STEPS[betIndex];
     if (st.balance < lineBet*E.LINES) throw new BackendError("insufficient_funds", "Not enough coins");
   }
-  const r = E.spin(rng, {lineBet, free:freeRound});
+  const r = E.spin(rng, {lineBet, free:freeRound, sign:st.sign | 0});
+  st.sign = r.sign.after;
   if (!freeRound) st.balance -= r.totalBet;
   st.balance += r.totalWin;
   if (freeRound){
@@ -1140,7 +1145,7 @@ function applySlotSpin(st, betIndex, rng){
     if (after > before){ let reward = 0; for (let l = before + 1; l <= after; l++) reward += LEVEL_REWARD(l); st.level = after; st.balance += reward;
       levelUp = {from:before, to:after, reward, maxBetIndex:E.maxBetIndex(after)}; }
   }
-  return {result:r, balance:st.balance, xp:st.xp, level:st.level, levelUp, fs:Object.assign({}, st.fs), free:freeRound};
+  return {result:r, balance:st.balance, xp:st.xp, level:st.level, levelUp, fs:Object.assign({}, st.fs), free:freeRound, sign:st.sign};
 }
 
 class DemoBackend {
@@ -1152,12 +1157,13 @@ class DemoBackend {
   get xp(){ return this.s ? this.s.xp : 0; }
   get level(){ return this.s ? this.s.level : 1; }
   get fs(){ return this.s ? this.s.fs : {left:0, lineBet:1, total:0, awarded:0}; }
+  get sign(){ return this.s ? this.s.sign | 0 : 0; }
   wheelAvailable(){ return !!this.s && (!this.s.lastWheel || utcDay(this.s.lastWheel) !== utcDay(Date.now())); }
   timedReadyAt(){ return this.s ? (this.s.lastTimed ? new Date(this.s.lastTimed).getTime() + E.TIMED_BONUS_MS : 0) : Infinity; }
   async signIn(provider){
     await sleep(450);
     this.s = { user:{ id:"demo-" + randU32().toString(16), name:provider === "apple" ? "Apple Demo Player" : "Google Demo Player", provider:provider + " (demo)" },
-               balance:CFG.STARTING_BALANCE, xp:0, level:1, fs:{left:0, lineBet:1, total:0, awarded:0}, lastWheel:null, lastTimed:new Date().toISOString() };
+               balance:CFG.STARTING_BALANCE, xp:0, level:1, sign:0, fs:{left:0, lineBet:1, total:0, awarded:0}, lastWheel:null, lastTimed:new Date().toISOString() };
     this.save(); return true;
   }
   async signOut(){ this.s = null; LS.del("slots-demo2"); }
@@ -1211,11 +1217,11 @@ class SupabaseBackend {
   async loadProfile(){
     await this.authed();
     const u = await this.j("/auth/v1/user", {headers:this.headers()});
-    const rows = await this.j(`/rest/v1/profiles?select=coin_balance,display_name,xp,level,free_spins_left,fs_line_bet,fs_total_win,fs_awarded,last_wheel_at,last_timed_at&id=eq.${encodeURIComponent(u.id)}`, {headers:this.headers()});
+    const rows = await this.j(`/rest/v1/profiles?select=coin_balance,display_name,xp,level,free_spins_left,fs_line_bet,fs_total_win,fs_awarded,suit_sign,last_wheel_at,last_timed_at&id=eq.${encodeURIComponent(u.id)}`, {headers:this.headers()});
     const r = rows[0] || {}, md = u.user_metadata || {};
     this.profile = {id:u.id, name:r.display_name || md.full_name || md.name || u.email || "Player", provider:(u.app_metadata || {}).provider,
       balance:Number(r.coin_balance || 0), xp:Number(r.xp || 0), level:Number(r.level || 1),
-      fs:{left:Number(r.free_spins_left || 0), lineBet:Number(r.fs_line_bet || 1), total:Number(r.fs_total_win || 0), awarded:Number(r.fs_awarded || 0)},
+      fs:{left:Number(r.free_spins_left || 0), lineBet:Number(r.fs_line_bet || 1), total:Number(r.fs_total_win || 0), awarded:Number(r.fs_awarded || 0)}, sign:Number(r.suit_sign || 0),
       lastWheel:r.last_wheel_at, lastTimed:r.last_timed_at};
   }
   async pollBalance(){ const before = this.balance; for (let i = 0; i < 12; i++){ await sleep(1500); try { await this.loadProfile(); } catch(e){} if (this.balance !== before){ App.refresh(true); Sfx.kaching(); toast("Coins added. Thanks!"); return; } } }
@@ -1224,11 +1230,12 @@ class SupabaseBackend {
   get xp(){ return this.profile ? this.profile.xp : 0; }
   get level(){ return this.profile ? this.profile.level : 1; }
   get fs(){ return this.profile ? this.profile.fs : {left:0, lineBet:1, total:0, awarded:0}; }
+  get sign(){ return this.profile ? this.profile.sign | 0 : 0; }
   wheelAvailable(){ return !!this.profile && (!this.profile.lastWheel || utcDay(this.profile.lastWheel) !== utcDay(Date.now())); }
   timedReadyAt(){ return this.profile ? (this.profile.lastTimed ? new Date(this.profile.lastTimed).getTime() + E.TIMED_BONUS_MS : 0) : Infinity; }
   async signIn(provider){ location.href = `${this.url}/auth/v1/authorize?provider=${encodeURIComponent(provider)}&redirect_to=${encodeURIComponent(location.origin + location.pathname)}`; return new Promise(() => {}); }
   async signOut(){ try { await this.authed(); await fetch(this.url + "/auth/v1/logout", {method:"POST", headers:this.headers()}); } catch(e){} this.clear(); }
-  apply(d){ const p = this.profile; p.balance = Number(d.balance); if (d.xp != null) p.xp = Number(d.xp); if (d.level != null) p.level = Number(d.level); if (d.fs) p.fs = d.fs; }
+  apply(d){ const p = this.profile; p.balance = Number(d.balance); if (d.xp != null) p.xp = Number(d.xp); if (d.level != null) p.level = Number(d.level); if (d.fs) p.fs = d.fs; if (d.sign != null) p.sign = Number(d.sign); }
   async slotSpin(betIndex){ await this.authed(); const d = await this.j("/functions/v1/spin", {method:"POST", headers:this.headers(), body:JSON.stringify({mode:"slots", betIndex})}); this.apply(d); return d; }
   async claimWheel(){ await this.authed(); const d = await this.j("/functions/v1/bonus", {method:"POST", headers:this.headers(), body:JSON.stringify({type:"wheel"})}); this.apply(d); this.profile.lastWheel = new Date().toISOString(); return d; }
   async claimTimed(){ await this.authed(); const d = await this.j("/functions/v1/bonus", {method:"POST", headers:this.headers(), body:JSON.stringify({type:"timed"})}); this.apply(d); this.profile.lastTimed = new Date().toISOString(); return d; }
@@ -1463,7 +1470,7 @@ let rsT; addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(
 if (window.ResizeObserver) new ResizeObserver(() => layoutBulbs()).observe($("#machine"));
 
 
-/* ======================= Main 5x3 slot game ======================= */
+/* ======================= Main 4x3 slot game ======================= */
 const SYM_ID = s => "s-" + s;
 const LINE_COLORS = ["#ffcf4a","#21f3ff","#ff2bd6","#7bff9a","#ff8a3d","#b48cff","#ff5c7a","#5cc8ff","#e9ff5c","#ff9ad5",
                      "#3dffcf","#ffd1a1","#a1b4ff","#ff7ae0","#9cff3d","#ffe14a","#4affff","#ff4af0","#c4ff8a","#ffa84a"];
@@ -1484,7 +1491,7 @@ const SymImg = (() => {
 class SlotReel {
   constructor(host, idx){
     this.idx = idx; this.strip = E.STRIPS[idx]; this.n = this.strip.length;
-    this.p = LS.get("slots-stops", [3, 11, 19, 27, 35])[idx] % this.n; // float position: top row shows strip[p]
+    this.p = LS.get("slots-stops", [3, 11, 19, 27])[idx] % this.n; // float position: top row shows strip[p]
     this.el = document.createElement("div"); this.el.className = "sreel";
     this.inner = document.createElement("div"); this.inner.className = "strip"; this.el.appendChild(this.inner);
     this.cells = Array.from({length:5}, () => {
@@ -1541,6 +1548,25 @@ class SlotReel {
   get settled(){ return this.state === "idle"; }
 }
 
+/* Suit sign: 4 lamps, lit state persisted per player by the backend. Shown from a local copy so a win is never revealed early. */
+const Sign = (() => {
+  const el = $("#suitSign"), lamps = [...el.children];
+  let shown = -1;
+  function set(mask){ mask = (mask | 0) & E.SIGN_FULL; if (mask === shown) return; shown = mask; lamps.forEach((l, i) => l.classList.toggle("on", !!(mask & (1 << i)))); }
+  async function reveal(sg){
+    const before = shown < 0 ? sg.before : shown;
+    if (sg.lit === before && !sg.complete) return;
+    lamps.forEach((l, i) => { if ((sg.lit & (1 << i)) && !(before & (1 << i))){ l.classList.remove("pop"); void l.offsetWidth; l.classList.add("pop"); } });
+    set(sg.lit); try { Sfx.coinDing(); } catch(e){}
+    if (sg.complete){
+      el.classList.add("full"); try { Sfx.kaching(); } catch(e){}
+      const r = el.getBoundingClientRect(); FX.sparks(r.left + r.width/2, r.top + r.height/2, 26, 200, 6);
+      await sleep(reduced ? 200 : 1300);
+      el.classList.remove("full"); set(sg.after);
+    } else await sleep(reduced ? 0 : 250);
+  }
+  return { set, reveal };
+})();
 const Slots = (() => {
   const win = $("#slotwin"), svgLines = $("#lines");
   let reelsS = [], betIdx = LS.get("slots-bet", 0), turbo = !!LS.get("slots-turbo", false);
@@ -1553,11 +1579,11 @@ const Slots = (() => {
     if (!force && key === lastSize) return;   // iOS fires resize on toolbar changes; don't re-layout for nothing
     lastSize = key;
     logo.style.display = "";
-    const fsH = fsOn ? $("#fsbar").offsetHeight + 6 : 0, logoH = logo.offsetHeight ? logo.offsetHeight + 6 : 0;
+    const signH = $("#suitSign").offsetHeight + 6, fsH = (fsOn ? $("#fsbar").offsetHeight + 6 : 0) + signH, logoH = logo.offsetHeight ? logo.offsetHeight + 6 : 0;
     const availW = zone.clientWidth - 2*9 - 8 - 16;
     let availH = zone.clientHeight - fsH - logoH - 2*9 - 8 - 12;
     const gap = Math.max(3, Math.min(6, Math.round(availW/90)));
-    const cw = Math.max(36, Math.floor(Math.min((availW - 4*gap)/5, 150)));
+    const cw = Math.max(36, Math.floor(Math.min((availW - E.REELS*gap)/E.REELS, 160)));
     if (logoH && availH/3 < cw*1.12){ logo.style.display = "none"; availH += logoH; } // short screens: drop the logo first
     const ch = Math.max(34, Math.floor(Math.min(availH/3, cw*1.42, 170)));
     const cwFit = Math.min(cw, Math.floor(ch*1.15)); // very short landscape: keep cells from getting too wide
@@ -1586,7 +1612,7 @@ const Slots = (() => {
     b.classList.toggle("auto", autoActive);
     const lbl = autoActive ? "STOP" : (spinning ? "STOP" : (fs ? "FREE" : "SPIN"));
     if (b.firstChild.textContent !== lbl) b.firstChild.textContent = lbl;
-    setText($("#spinSub"), autoActive ? (auto < 0 ? "AUTO \u221e" : `AUTO ${auto}`) : fs ? `${Backend.fs.left} LEFT` : "20 LINES");
+    setText($("#spinSub"), autoActive ? (auto < 0 ? "AUTO \u221e" : `AUTO ${auto}`) : fs ? `${Backend.fs.left} LEFT` : `${E.LINES} LINES`);
     $("#autoBtn").classList.toggle("on", autoActive); $("#autoBtn").setAttribute("aria-pressed", String(autoActive));
     $("#turboBtn").classList.toggle("on", turbo); $("#turboBtn").setAttribute("aria-pressed", String(turbo));
   }
@@ -1611,7 +1637,7 @@ const Slots = (() => {
     svgLines.setAttribute("viewBox", `0 0 ${wr.width} ${wr.height}`);
     svgLines.innerHTML = wins.map(w => {
       const pl = E.PAYLINES[w.line], pts = pl.map((row, reel) => cellCenter(reel, row));
-      const first = [Math.max(2, pts[0][0] - reelsS[0].cw*.55), pts[0][1]], last = [pts[4][0] + reelsS[4].cw*.55, pts[4][1]];
+      const first = [Math.max(2, pts[0][0] - reelsS[0].cw*.55), pts[0][1]], last = [pts[E.REELS - 1][0] + reelsS[E.REELS - 1].cw*.55, pts[E.REELS - 1][1]];
       const all = [first, ...pts, last]; let len = 0; for (let i = 1; i < all.length; i++) len += Math.hypot(all[i][0] - all[i-1][0], all[i][1] - all[i-1][1]);
       const col = LINE_COLORS[w.line];
       const pts2 = all.map(p => p.map(v => v.toFixed(1)).join(",")).join(" ");
@@ -1621,12 +1647,11 @@ const Slots = (() => {
   }
   function markCells(cells){ $$("#slotwin .scell.hit").forEach(c => c.classList.remove("hit")); cells.forEach(([reel, row]) => reelsS[reel].cellAt(row).classList.add("hit")); }
   function showAllWins(res){
-    const cells = res.lines.flatMap(l => l.cells).concat(res.scatter.count >= 3 ? res.scatter.cells : []);
+    const cells = res.lines.flatMap(l => l.cells);
     win.classList.add("showing"); markCells(cells); drawLines(res.lines);
   }
   function cycleWins(res){
     const items = res.lines.map(l => ({cells:l.cells, lines:[l], label:`LINE ${l.line + 1} \u00b7 ${l.count}\u00d7 ${E.SYMBOLS[l.sym].name}${l.wild ? " \u00b7 WILD x2" : ""}`, win:l.win}));
-    if (res.scatter.win) items.push({cells:res.scatter.cells, lines:[], label:`${res.scatter.count}\u00d7 BONUS PLANET`, win:res.scatter.win});
     if (items.length < 2) return;
     let k = 0;
     const next = () => { if (spinning || lastResult !== res) return; const it = items[k++ % items.length]; markCells(it.cells); drawLines(it.lines); setWinbar(it.label, it.win, false); cycleT = setTimeout(next, turbo ? 900 : 1400); };
@@ -1697,22 +1722,15 @@ const Slots = (() => {
     const res = resp.result; lastResult = res; spinCount++;
     // Backend balance now includes win + level reward; hold those back until the reels reveal them.
     balAdj = -(res.totalWin + (resp.levelUp ? resp.levelUp.reward : 0));
-    // stop schedule (+ honest anticipation: only when 2+ scatters are already visible on landed reels)
+    // stop schedule: left to right
     const minRun = reduced ? 120 : turbo ? 160 : 420, stag = reduced ? 60 : turbo ? 80 : 170;
     const wait = Math.max(0, minRun - (performance.now() - t0)); await sleep(hurry ? 0 : wait);
-    let scatSeen = 0;
     for (let i = 0; i < E.REELS; i++){
       const r = reelsS[i];
       if (i > 0 && !hurry) await sleep(stag);
-      const tense = scatSeen >= 2 && !hurry;
-      if (tense){ r.el.classList.add("tense"); Sfx.drumroll(turbo ? .5 : .9); await sleep(reduced ? 200 : turbo ? 300 : 650); r.el.classList.remove("tense"); }
-      const p = r.stopAt(res.stops[i], performance.now(), {lead: hurry ? 1.4 : tense ? 4.6 : 2.4}); kick();
-      const landed = p.then(() => {
-        Sfx.stop(i); Sfx.whirLevel(1 - (i + 1)/E.REELS);
-        if (res.grid[i].includes("S")){ const row = res.grid[i].indexOf("S"), c = r.cellAt(row).getBoundingClientRect(); FX.sparks(c.left + c.width/2, c.top + c.height/2, 12, 60, 4); }
-      });
-      if (res.grid[i].includes("S")) scatSeen++;
-      if (i === E.REELS - 1 || tense || res.grid[i].includes("S")) await landed; // later reels wait so anticipation is honest
+      const p = r.stopAt(res.stops[i], performance.now(), {lead: hurry ? 1.4 : 2.4}); kick();
+      const landed = p.then(() => { Sfx.stop(i); Sfx.whirLevel(1 - (i + 1)/E.REELS); });
+      if (i === E.REELS - 1) await landed;
     }
     await new Promise(r => { const chk = () => reelsS.every(x => x.settled) ? r() : setTimeout(chk, 16); chk(); });
     Sfx.whirStop(); LS.set("slots-stops", res.stops);
@@ -1725,7 +1743,7 @@ const Slots = (() => {
     const res = resp.result, tierName = E.tier(res.totalWin, res.totalBet);
     if (res.totalWin > 0){
       showAllWins(res);
-      const lbl = res.free ? "FREE SPIN WIN x3" : res.lines.some(l => l.wild) ? "WILD WIN!" : "WIN";
+      const lbl = res.free ? "FREE SPIN WIN x2" : res.lines.some(l => l.wild) ? "WILD WIN!" : "WIN";
       setWinbar(lbl, tierName === "win" ? 0 : null); const amtEl = $("#winAmt");
       if (tierName === "win"){ Sfx.win(); await countUp(amtEl, res.totalWin, turbo ? 350 : 800, false); }
       else {
@@ -1741,10 +1759,11 @@ const Slots = (() => {
       toast(`LEVEL ${lu.to}! +${fmt(lu.reward)} coins${unlocked.length ? ` \u00b7 ${fmt(E.BET_STEPS[unlocked.at(-1)]*E.LINES)} bet unlocked` : ""}`, 3600);
       const b = $("#lvlBadge"); if (!reduced){ b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop"); }
     }
+    if (res.sign) await Sign.reveal(res.sign);
     if (res.fsAdded){
       Sfx.jackpot();
-      await overlay("fsx", res.free ? "+" + res.fsAdded + " SPINS" : "FREE SPINS", null, res.free ? "RETRIGGERED!" : `${res.fsAdded} FREE SPINS \u00b7 ALL WINS x3`, autoActive ? 2600 : 4000);
-      size(); renderBet();
+      await overlay("fsx", res.free ? "+" + res.fsAdded + " SPINS" : "FREE SPINS", null, res.free ? "RETRIGGERED!" : `ALL 4 SUITS LIT \u00b7 ${res.fsAdded} FREE SPINS \u00b7 ALL WINS x${E.FS_MULTIPLIER}`, autoActive ? 2600 : 4000);
+      Sign.set(res.sign.after); size(); renderBet();
     }
     if (res.free && Backend.fs.left === 0){
       await overlay(E.tier(Backend.fs.total || resp.fs.total, res.totalBet) || "big", "FEATURE COMPLETE", resp.fs.total, `${fmt(resp.fs.total)} coins from free spins`, autoActive ? 3000 : 5000);
@@ -1782,10 +1801,9 @@ const Slots = (() => {
     const lb = lineBet(); $("#ptBet").textContent = fmt(lb*E.LINES); $("#ptLine").textContent = fmt(lb);
     $("#ptGrid").innerHTML = Object.entries(E.PAYTABLE).map(([s, p]) =>
       `<div class="ptrow"><svg viewBox="0 0 100 100"><use href="#${SYM_ID(s)}"/></svg><div>${p.map((v, i) => `<span>${i + 3}\u00d7</span> ${fmt(v*lb)}`).join("<br>")}</div></div>`).join("") +
-      `<div class="ptrow"><svg viewBox="0 0 100 100"><use href="#s-W"/></svg><div><span>WILD</span><br>subs all but BONUS<br><span>reels 2-4 \u00b7 x2</span></div></div>` +
-      `<div class="ptrow"><svg viewBox="0 0 100 100"><use href="#s-S"/></svg><div>${[3,4,5].map(n => `<span>${n}\u00d7</span> ${fmt(E.SCATTER_PAY[n]*lb*E.LINES)} + ${E.FREE_SPINS[n]} FS`).join("<br>")}</div></div>`;
-    $("#ptRules").innerHTML = `<b>20 fixed lines</b> pay left to right from the first reel; highest win per line. <b>WILD</b> appears on reels 2&ndash;4 and doubles any line it completes.
-      <b>3+ BONUS PLANETS</b> anywhere pay &times; total bet and award <b>10/15/20 FREE SPINS</b> with all wins <b>&times;3</b> (retriggers up to ${E.MAX_FREE_SPINS}).
+      `<div class="ptrow"><svg viewBox="0 0 100 100"><use href="#s-W"/></svg><div><span>WILD</span><br>subs for every suit<br><span>reels 2-4 \u00b7 x2</span></div></div>`;
+    $("#ptRules").innerHTML = `<b>${E.LINES} fixed lines</b> pay 3 or 4 of a kind left to right from the first reel; gold suits pay more. <b>WILD</b> appears on reels 2&ndash;4 and doubles any line it completes.
+      <b>SUIT SIGN:</b> any win with a suit lights that suit and it stays lit. Light all 4 for <b>${E.SIGN_FREE_SPINS} FREE SPINS</b> with all wins <b>&times;${E.FS_MULTIPLIER}</b>, then the sign resets (retriggers up to ${E.MAX_FREE_SPINS}).
       Every coin bet earns XP; level-ups pay bonus coins and unlock bigger bets.`;
     $("#ptLines").innerHTML = E.PAYLINES.map((pl, i) => `<div class="ln"><i>${[0,1,2].map(row => pl.map(r => `<b class="${r === row ? "on" : ""}"></b>`).join("")).join("")}</i>${i + 1}</div>`).join("");
   }
@@ -1801,7 +1819,7 @@ const Slots = (() => {
   let rz; const sizeSoon = () => { clearTimeout(rz); rz = setTimeout(() => size(), 120); };
   addEventListener("resize", sizeSoon); addEventListener("orientationchange", () => setTimeout(() => size(true), 300));
   if (window.ResizeObserver) new ResizeObserver(sizeSoon).observe($("#reelzone"));
-  function reset(){ stopAuto(); clearWins(); setWinbar("GOOD LUCK!", null, false); renderBet(); size(true); }
+  function reset(){ Sign.set(Backend.sign); stopAuto(); clearWins(); setWinbar("GOOD LUCK!", null, false); renderBet(); size(true); }
   // After a dialog closes: pick autoplay / pending free spins back up if they were paused by it.
   function resume(){ if (spinning || presenting || overlayOpen || (!autoActive && Backend.fs.left === 0)) return; clearTimeout(nextT); nextT = setTimeout(() => { if (!spinning && !presenting) spin(); }, 400); }
   return { spin, spinOrStop, size, renderBet, reset, totalBet, startAuto, stopAuto, resume, balanceAdj: () => balAdj,
@@ -1886,7 +1904,7 @@ window.__slots = { spin, setMode, randInt, slot:Slots, engine:E,
   $("#authDemoNote").textContent = Backend.kind === "demo" ? "Demo mode: no real accounts. This makes a pretend player stored only in this browser." : "We only use your name and email to keep your coin balance.";
   syncMute(); updateNameCount(false); Bg.reset(); renderHistory();
   try { await Backend.init(); } catch(e){ console.warn("backend init failed", e); }
-  App.refresh(false); Slots.size(true);
+  App.refresh(false); Sign.set(Backend.sign); Slots.size(true);
   // Landscape menu
   $("#menuBtn").onclick = () => openModal("#menuModal");
   $$("#menuModal [data-menu]").forEach(b => b.onclick = () => { closeModal($("#menuModal")); const k = b.dataset.menu;
