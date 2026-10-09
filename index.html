@@ -469,6 +469,17 @@ body.app .toast.show{transform:translate(-50%,0)}
   .jp .odo{font-size:clamp(11px,1.9vw,15px)}
   .jp.mega .odo{font-size:clamp(13px,2.3vw,18px)}
 }
+/* ---- Ace of Spades locks: overlay grid aligned to the 4x3 reel cells; transform/opacity only ---- */
+.aceLayer{position:absolute;inset:4px;z-index:2;pointer-events:none;display:grid;grid-template-columns:repeat(4,var(--cw,64px));grid-template-rows:repeat(3,var(--ch,64px));column-gap:var(--gap,4px)}
+.ace{position:relative;display:grid;place-items:center;opacity:0;border-radius:10px;background:#1a0638;transition:opacity .2s}
+.ace.on{opacity:1}
+.ace img{width:92%;height:92%;object-fit:contain}
+.ace::before{content:"";position:absolute;inset:0;border-radius:10px;box-shadow:inset 0 0 0 2px #ffcf4a,0 0 14px 2px rgba(255,207,74,.7)}
+.ace.on::before{animation:aceGlow 1.6s ease-in-out infinite alternate}
+@keyframes aceGlow{from{opacity:.45}to{opacity:1}}
+.ace.pop img{animation:acePop .45s cubic-bezier(.3,1.7,.5,1)}
+@keyframes acePop{0%{transform:scale(.3)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.ace::before,.ace.pop img{animation:none}}
 </style>
 </head>
 <body class="app">
@@ -492,6 +503,8 @@ body.app .toast.show{transform:translate(-50%,0)}
     <linearGradient id="gHeart" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb0c4"/><stop offset=".5" stop-color="#ff2b55"/><stop offset="1" stop-color="#8a0024"/></linearGradient>
     <radialGradient id="gCoin" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="#5a2a90"/><stop offset="1" stop-color="#1e0640"/></radialGradient>
     <linearGradient id="gTile" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff4fd8"/><stop offset=".55" stop-color="#9b00a8"/><stop offset="1" stop-color="#4a0070"/></linearGradient>
+    <linearGradient id="gCard" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e9e2f5"/></linearGradient>
+    <linearGradient id="gAceSpade" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a3560"/><stop offset="1" stop-color="#05030f"/></linearGradient>
   </defs>
   <symbol id="s-s" viewBox="0 0 100 100"><g transform="translate(8 8) scale(.84)"><path d="M50 8C34 30 12 42 12 60c0 14 12 22 24 19 5-1 9-4 11-8l-5 21h16l-5-21c2 4 6 7 11 8 12 3 24-5 24-19 0-18-22-30-38-52z" fill="url(#gSpade)" stroke="#e8eeff" stroke-width="3" stroke-linejoin="round"/><path d="M34 46c4-8 9-14 14-20" stroke="#fff" stroke-opacity=".6" stroke-width="4" stroke-linecap="round" fill="none"/></g></symbol>
   <symbol id="s-h" viewBox="0 0 100 100"><g transform="translate(8 8) scale(.84)"><path d="M50 88C22 68 9 52 10 35c1-13 11-22 24-22 8 0 13 4 16 11 3-7 8-11 16-11 13 0 23 9 24 22 1 17-12 33-40 53z" fill="url(#gHeart)" stroke="#ffe0e8" stroke-width="3" stroke-linejoin="round"/><path d="M24 30c2-6 7-9 12-9" stroke="#fff" stroke-opacity=".7" stroke-width="4" stroke-linecap="round" fill="none"/></g></symbol>
@@ -501,6 +514,7 @@ body.app .toast.show{transform:translate(-50%,0)}
   <symbol id="s-H" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="url(#gCoin)" stroke="url(#gGold)" stroke-width="6"/><circle cx="50" cy="50" r="37" fill="none" stroke="#ffe9a0" stroke-opacity=".45" stroke-width="1.5"/><g transform="translate(19 19) scale(.62)"><path d="M50 88C22 68 9 52 10 35c1-13 11-22 24-22 8 0 13 4 16 11 3-7 8-11 16-11 13 0 23 9 24 22 1 17-12 33-40 53z" fill="url(#gHeart)" stroke="#ffe0e8" stroke-width="3" stroke-linejoin="round"/><path d="M24 30c2-6 7-9 12-9" stroke="#fff" stroke-opacity=".7" stroke-width="4" stroke-linecap="round" fill="none"/></g></symbol>
   <symbol id="s-D" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="url(#gCoin)" stroke="url(#gGold)" stroke-width="6"/><circle cx="50" cy="50" r="37" fill="none" stroke="#ffe9a0" stroke-opacity=".45" stroke-width="1.5"/><g transform="translate(19 19) scale(.62)"><path d="M14 38 32 14h36l18 24-36 52z" fill="url(#gDia)" stroke="#e9ffff" stroke-width="3" stroke-linejoin="round"/><path d="M14 38h72M32 14l9 24 9-24 9 24 9-24M41 38l9 52 9-52" fill="none" stroke="#fff" stroke-opacity=".65" stroke-width="2"/><circle cx="33" cy="25" r="3" fill="#fff"/></g></symbol>
   <symbol id="s-C" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="url(#gCoin)" stroke="url(#gGold)" stroke-width="6"/><circle cx="50" cy="50" r="37" fill="none" stroke="#ffe9a0" stroke-opacity=".45" stroke-width="1.5"/><g transform="translate(19 19) scale(.62)"><g fill="url(#gGreen)" stroke="#dcffd0" stroke-width="3" stroke-linejoin="round"><circle cx="50" cy="29" r="17"/><circle cx="29" cy="57" r="17"/><circle cx="71" cy="57" r="17"/><path d="M45 50h10l6 40H39z"/><circle cx="50" cy="51" r="9"/></g><circle cx="44" cy="22" r="4" fill="#fff" fill-opacity=".6"/></g></symbol>
+  <symbol id="s-A" viewBox="0 0 100 100"><rect x="14" y="5" width="72" height="90" rx="9" fill="url(#gCard)" stroke="url(#gGold)" stroke-width="4"/><rect x="20" y="11" width="60" height="78" rx="5" fill="none" stroke="#c9a24a" stroke-opacity=".55" stroke-width="1.2"/><text x="24" y="28" font-family="Georgia,'Times New Roman',serif" font-weight="700" font-size="17" fill="#14102a">A</text><text x="76" y="86" font-family="Georgia,'Times New Roman',serif" font-weight="700" font-size="17" fill="#14102a" text-anchor="end">A</text><g transform="translate(29 28) scale(.42)"><path d="M50 8C34 30 12 42 12 60c0 14 12 22 24 19 5-1 9-4 11-8l-5 21h16l-5-21c2 4 6 7 11 8 12 3 24-5 24-19 0-18-22-30-38-52z" fill="url(#gAceSpade)"/></g></symbol>
   <symbol id="s-W" viewBox="0 0 100 100"><rect x="6" y="14" width="88" height="72" rx="14" fill="url(#gTile)" stroke="url(#gGold)" stroke-width="5"/><rect x="13" y="21" width="74" height="58" rx="9" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="1.5"/><text x="50" y="62" text-anchor="middle" font-family="'Arial Black',Impact,system-ui,sans-serif" font-weight="900" font-size="27" fill="url(#gGold)" stroke="#5a0060" stroke-width="1.2" letter-spacing="1">WILD</text></symbol>
 </svg>
 
@@ -534,7 +548,7 @@ body.app .toast.show{transform:translate(-50%,0)}
       <div class="bulbs" id="sbulbs" aria-hidden="true"></div>
       <div class="slotwin" id="slotwin" aria-label="Slot reels"><svg id="lines" aria-hidden="true"></svg></div>
     </div>
-    <div class="fsbar" id="fsbar"><span>FREE SPINS <b id="fsLeft">0</b></span><span>ALL WINS x2</span><span>WON <b id="fsWon">0</b></span></div>
+    <div class="fsbar" id="fsbar"><span>FREE SPINS <b id="fsLeft">0</b></span><span>ACES <b id="aceCount">0</b>/12</span><span>ALL WINS x2</span><span>WON <b id="fsWon">0</b></span></div>
   </main>
   <div class="winbar" id="winbar" aria-live="polite"><span id="winLbl">GOOD LUCK!</span><b id="winAmt"></b></div>
   <footer class="controls">
@@ -701,7 +715,7 @@ Player 6</textarea>
   <filter id="mb5"><feGaussianBlur stdDeviation="0 12"/></filter>
 </svg>
 
-<script src="config.js?v=202610090124"></script>
+<script src="config.js?v=202610090131"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -1019,6 +1033,7 @@ const SlotEngine = (() => {
   // Card-suit symbols. Uppercase = gold tier (high), lowercase = plain tier (low). Art is original inline SVG.
   const SYMBOLS = {
     W: {name:"Wild",          kind:"wild"},
+    A: {name:"Ace of Spades", kind:"ace"},   // free spins only; never pays on lines
     S: {name:"Gold Spade",    kind:"high", suit:"S"},
     D: {name:"Gold Diamond",  kind:"high", suit:"D"},
     H: {name:"Gold Heart",    kind:"high", suit:"H"},
@@ -1032,15 +1047,17 @@ const SlotEngine = (() => {
   const SUITS = ["S", "H", "D", "C"], SIGN_FULL = 15;
   // Pays per LINE BET for 3 / 4 of a kind (left to right).
   const PAYTABLE = {
-    S: [45, 160], D: [30, 120], H: [22, 90], C: [16, 65],
-    s: [ 8,  30], d: [ 6,  24], h: [ 5, 18], c: [ 4, 15]
+    S: [50, 180], D: [34, 135], H: [25, 100], C: [18, 74],
+    s: [ 9,  34], d: [ 8,  27], h: [ 6, 20], c: [ 4, 17]
   };
   const SIGN_FREE_SPINS = 10;
-  // Jackpots (paid spins only), one draw per spin from [0, JP_ROLL):
-  //   MEGA: progressive. Chance = totalBet / JP_ROLL (scales with bet). Seed = 10x max bet; every paid bet adds 1%
-  //         to the pool (pool kept in 1/100 units: pool_x100 += totalBet). Paid from the pool by the backend, then reset to seed.
-  //   WOW: fixed 50x total bet, 1 in 10,000.   MINI: fixed 10x total bet, 1 in 1,000.
-  const JP_ROLL = 1000000000, JP = { MINI_MULT: 10, WOW_MULT: 50, MINI_ODDS: 1000, WOW_ODDS: 10000, MEGA_SEED: 0, MEGA_RATE: 0.01 };
+  // ACE OF SPADES lock feature (free spins only). Each unlocked cell independently turns into an ace with chance
+  // ACE_CUT/ACE_ROLL per free spin; an ace LOCKS in its cell for the rest of the round (12-bit mask, bit = reel*3+row).
+  // Jackpots are won ONLY by locked aces, paid at the end of the round, highest tier only:
+  //   6+ = MINI (2x the player's max total bet), 9+ = WOW (3x max total bet), 12 = MEGA (progressive pool).
+  // MEGA pool: seed 10x the top total bet; every paid bet adds 1% (pool kept in 1/100 units: pool_x100 += totalBet).
+  const ACE_ROLL = 10000, ACE_CUT = 275, CELLS = 12, ACE_FULL = 4095;
+  const JP = { MINI_ACES: 6, WOW_ACES: 9, MEGA_ACES: 12, MINI_MAXBET_MULT: 2, WOW_MAXBET_MULT: 3, MEGA_SEED: 0, MEGA_RATE: 0.01 };
   const FS_MULTIPLIER = 2, WILD_MULTIPLIER = 2, MAX_FREE_SPINS = 100;
   const PAYLINES = [
     [1,1,1,1],[0,0,0,0],[2,2,2,2],[0,1,1,0],[2,1,1,2],
@@ -1075,17 +1092,22 @@ const SlotEngine = (() => {
   function xpForLevel(lvl){ return lvl <= 1 ? 0 : Math.round(400 * Math.pow(lvl - 1, 1.6)); }
   function maxBetIndex(level){ let m = 0; BET_UNLOCK.forEach((need, i) => { if (level >= need) m = i; }); return m; }
 
-  /** rng(n) must return a uniform integer in [0, n). opts: {lineBet, free:boolean, sign:0..15 (suit-sign bitmask before this spin)} */
+  /** rng(n) must return a uniform integer in [0, n). opts: {lineBet, free:boolean, sign:0..15 (suit-sign bitmask), locked:0..4095 (aces locked this round)} */
   function spin(rng, opts){
     const lineBet = opts.lineBet, totalBet = lineBet * LINES, free = !!opts.free;
     const before = (opts.sign | 0) & SIGN_FULL;
     const stops = STRIPS.map(s => rng(s.length));
     const grid = stops.map((st, r) => [0,1,2].map(k => STRIPS[r][(st + k) % STRIPS[r].length])); // grid[reel][row]
+    // free spins: locked aces stay put, every other cell may land a new ace (one draw per unlocked cell, in cell order)
+    const lockedBefore = free ? (opts.locked | 0) & ACE_FULL : 0;
+    let lockedAfter = lockedBefore;
+    if (free) for (let c = 0; c < CELLS; c++){ if (!(lockedBefore & (1 << c)) && rng(ACE_ROLL) < ACE_CUT) lockedAfter |= 1 << c; }
+    for (let c = 0; c < CELLS; c++) if (lockedAfter & (1 << c)) grid[Math.floor(c/3)][c % 3] = "A";
     const mult = free ? FS_MULTIPLIER : 1;
     const lines = [];
     PAYLINES.forEach((pl, li) => {
       const sym = grid[0][pl[0]];
-      if (sym === "W") return;
+      if (sym === "W" || sym === "A") return;
       let n = 1, wild = false;
       while (n < REELS){ const s = grid[n][pl[n]]; if (s === sym || s === "W"){ if (s === "W") wild = true; n++; } else break; }
       if (n < 3) return;
@@ -1099,16 +1121,17 @@ const SlotEngine = (() => {
     const complete = lit === SIGN_FULL;
     const fsAward = complete ? SIGN_FREE_SPINS : 0;
     const lineWin = lines.reduce((a, l) => a + l.win, 0);
-    let jackpot = null;
-    if (!free){
-      const r = rng(JP_ROLL), megaCut = totalBet, wowCut = megaCut + JP_ROLL/JP.WOW_ODDS, miniCut = wowCut + JP_ROLL/JP.MINI_ODDS;
-      if (r < megaCut) jackpot = {kind: "MEGA", amount: 0};                       // amount = pool, filled in at settlement
-      else if (r < wowCut) jackpot = {kind: "WOW", amount: JP.WOW_MULT * totalBet};
-      else if (r < miniCut) jackpot = {kind: "MINI", amount: JP.MINI_MULT * totalBet};
-    }
-    const jpWin = jackpot ? jackpot.amount : 0;
-    return { version: VERSION, stops, grid, lines, lineWin, jackpot, sign: {before, lit, newly, complete, after: complete ? 0 : lit},
-             fsAward, totalWin: lineWin + jpWin, lineBet, totalBet, free, multiplier: mult };
+    return { version: VERSION, stops, grid, lines, lineWin, aces: {before: lockedBefore, after: lockedAfter, count: popcount(lockedAfter)}, sign: {before, lit, newly, complete, after: complete ? 0 : lit},
+             fsAward, totalWin: lineWin, lineBet, totalBet, free, multiplier: mult };
+  }
+  function popcount(m){ let n = 0; for (; m; m &= m - 1) n++; return n; }
+  /** End-of-round ace award (highest tier only). MEGA amount = the pool, supplied by the backend. */
+  function aceAward(count, level, megaPool){
+    const maxTotal = BET_STEPS[maxBetIndex(level)] * LINES;
+    if (count >= JP.MEGA_ACES) return {tier: "MEGA", count, amount: megaPool};
+    if (count >= JP.WOW_ACES)  return {tier: "WOW",  count, amount: JP.WOW_MAXBET_MULT * maxTotal};
+    if (count >= JP.MINI_ACES) return {tier: "MINI", count, amount: JP.MINI_MAXBET_MULT * maxTotal};
+    return null;
   }
   function tier(win, totalBet){ const x = win/totalBet; return x >= 50 ? "epic" : x >= 25 ? "mega" : x >= 10 ? "big" : win > 0 ? "win" : ""; }
   // Daily wheel: 12 segments (coins scale with level). Weights sum to 100.
@@ -1123,7 +1146,7 @@ const SlotEngine = (() => {
   }
   const TIMED_BONUS_MS = 3 * 3600 * 1000;
   function timedBonusCoins(level){ return 1000 + 100 * Math.min(90, level - 1); }
-  return { VERSION, JP, JP_ROLL, REELS, ROWS, LINES, SYMBOLS, SUITS, SIGN_FULL, PAYTABLE, SIGN_FREE_SPINS, FS_MULTIPLIER, WILD_MULTIPLIER, MAX_FREE_SPINS,
+  return { VERSION, JP, ACE_ROLL, ACE_CUT, CELLS, ACE_FULL, popcount, aceAward, REELS, ROWS, LINES, SYMBOLS, SUITS, SIGN_FULL, PAYTABLE, SIGN_FREE_SPINS, FS_MULTIPLIER, WILD_MULTIPLIER, MAX_FREE_SPINS,
            PAYLINES, BET_STEPS, BET_UNLOCK, STRIPS, COUNTS, spin, tier, levelForXp, xpForLevel, maxBetIndex, WHEEL, wheelSpin,
            TIMED_BONUS_MS, timedBonusCoins, mulberry32 };
 })();
@@ -1240,17 +1263,21 @@ function applySlotSpin(st, betIndex, rng){
     lineBet = E.BET_STEPS[betIndex];
     if (st.balance < lineBet*E.LINES) throw new BackendError("insufficient_funds", "Not enough credits");
   }
-  const r = E.spin(rng, {lineBet, free:freeRound, sign:st.sign | 0});
+  const r = E.spin(rng, {lineBet, free:freeRound, sign:st.sign | 0, locked:freeRound ? st.fs.locked | 0 : 0});
   st.sign = r.sign.after;
   if (st.jp == null) st.jp = E.JP.MEGA_SEED*100;              // demo: per-player MEGA pool (1/100 units)
-  if (!freeRound){ st.jp += r.totalBet;                       // 1% of the bet feeds the pool
-    if (r.jackpot && r.jackpot.kind === "MEGA"){ r.jackpot.amount = Math.floor(st.jp/100); r.totalWin += r.jackpot.amount; st.jp = E.JP.MEGA_SEED*100; } }
+  if (!freeRound) st.jp += r.totalBet;                        // 1% of every paid bet feeds the MEGA pool
   if (!freeRound) st.balance -= r.totalBet;
   st.balance += r.totalWin;
   if (freeRound){
-    st.fs.left--; st.fs.total += r.totalWin;
+    st.fs.left--; st.fs.total += r.totalWin; st.fs.locked = r.aces.after;
     if (r.fsAward){ const add = Math.min(r.fsAward, E.MAX_FREE_SPINS - st.fs.awarded); st.fs.left += add; st.fs.awarded += add; r.fsAdded = add; }
-  } else if (r.fsAward){ st.fs = {left:r.fsAward, lineBet, total:0, awarded:r.fsAward}; r.fsAdded = r.fsAward; }
+    if (st.fs.left === 0){   // round over: locked aces pay the highest jackpot tier reached, then the locks clear
+      const a = E.aceAward(r.aces.count, st.level, Math.floor(st.jp/100));
+      if (a){ r.aceAward = a; r.totalWin += a.amount; st.balance += a.amount; if (a.tier === "MEGA") st.jp = E.JP.MEGA_SEED*100; }
+      st.fs.locked = 0;
+    }
+  } else if (r.fsAward){ st.fs = {left:r.fsAward, lineBet, total:0, awarded:r.fsAward, locked:0}; r.fsAdded = r.fsAward; }
   let levelUp = null;
   if (!freeRound){
     const before = st.level; st.xp += r.totalBet; const after = E.levelForXp(st.xp);
@@ -1331,11 +1358,11 @@ class SupabaseBackend {
   async loadProfile(){
     await this.authed();
     const u = await this.j("/auth/v1/user", {headers:this.headers()});
-    const rows = await this.j(`/rest/v1/profiles?select=coin_balance,display_name,xp,level,free_spins_left,fs_line_bet,fs_total_win,fs_awarded,suit_sign,last_wheel_at,last_timed_at&id=eq.${encodeURIComponent(u.id)}`, {headers:this.headers()});
+    const rows = await this.j(`/rest/v1/profiles?select=coin_balance,display_name,xp,level,free_spins_left,fs_line_bet,fs_total_win,fs_awarded,fs_locked,suit_sign,last_wheel_at,last_timed_at&id=eq.${encodeURIComponent(u.id)}`, {headers:this.headers()});
     const r = rows[0] || {}, md = u.user_metadata || {};
     this.profile = {id:u.id, name:r.display_name || md.full_name || md.name || u.email || "Player", provider:(u.app_metadata || {}).provider,
       balance:Number(r.coin_balance || 0), xp:Number(r.xp || 0), level:Number(r.level || 1),
-      fs:{left:Number(r.free_spins_left || 0), lineBet:Number(r.fs_line_bet || 1), total:Number(r.fs_total_win || 0), awarded:Number(r.fs_awarded || 0)}, sign:Number(r.suit_sign || 0),
+      fs:{left:Number(r.free_spins_left || 0), lineBet:Number(r.fs_line_bet || 1), total:Number(r.fs_total_win || 0), awarded:Number(r.fs_awarded || 0), locked:Number(r.fs_locked || 0)}, sign:Number(r.suit_sign || 0),
       lastWheel:r.last_wheel_at, lastTimed:r.last_timed_at};
   }
   async pollBalance(){ const before = this.balance; for (let i = 0; i < 12; i++){ await sleep(1500); try { await this.loadProfile(); } catch(e){} if (this.balance !== before){ App.refresh(true); Sfx.kaching(); toast("Credits added. Thanks!"); return; } } }
@@ -1686,12 +1713,27 @@ const Sign = (() => {
   }
   return { set, reveal };
 })();
-/* Jackpot panel: MEGA = progressive pool (rolls up as bets feed it), WOW / MINI = fixed multiples of the current bet. */
+/* Jackpot panel: MEGA = progressive pool (rolls up as bets feed it), WOW / MINI = fixed 3x / 2x the player's MAX total bet. */
+const FMT3 = new Intl.NumberFormat("en-US", {minimumFractionDigits:3, maximumFractionDigits:3});
+const maxTotalBet = () => E.BET_STEPS[E.maxBetIndex(Backend.level)]*E.LINES;
+/* Ace of Spades locks (free spins only): an overlay cell per reel cell; locked aces glow and stay put while the reels spin under them. */
+const Aces = (() => {
+  const layer = document.createElement("div"); layer.className = "aceLayer"; layer.setAttribute("aria-hidden", "true");
+  const cells = Array.from({length:E.CELLS}, (_, c) => { const d = document.createElement("div"); d.className = "ace"; d.style.gridColumn = String(Math.floor(c/3) + 1); d.style.gridRow = String(c % 3 + 1);
+    const im = document.createElement("img"); im.alt = ""; im.draggable = false; im.src = SymImg("A"); d.appendChild(im); layer.appendChild(d); return d; });
+  $("#slotwin").appendChild(layer);
+  let shown = 0;
+  function set(mask, popNew){ mask |= 0; cells.forEach((d, c) => { const on = !!(mask & (1 << c)); if (on !== d.classList.contains("on")){ d.classList.toggle("on", on); if (on && popNew && !reduced){ d.classList.remove("pop"); void d.offsetWidth; d.classList.add("pop"); } } });
+    shown = mask; const ac = $("#aceCount"), v = String(E.popcount(mask)); if (ac.textContent !== v) ac.textContent = v; }
+  async function reveal(a){ if (!a || a.after === shown) return; const fresh = a.after & ~shown; set(a.after, true);
+    if (fresh){ try { Sfx.coinDing(); } catch(e){} await sleep(reduced ? 0 : 450); } }
+  return { set, reveal, get mask(){ return shown; } };
+})();
 const Jackpots = (() => {
   let pool = null, bet = null;
   function show(p, totalBet, ms=700){
-    if (p != null && p !== pool){ const first = pool == null; pool = p; odoSet($("#jpMega"), fmt(Math.floor(pool/100)), first ? 0 : ms); }
-    if (totalBet != null && totalBet !== bet){ bet = totalBet; odoSet($("#jpWow"), fmt(E.JP.WOW_MULT*bet), 0); odoSet($("#jpMini"), fmt(E.JP.MINI_MULT*bet), 0); }
+    if (p != null && p !== pool){ const first = pool == null; pool = p; odoSet($("#jpMega"), FMT3.format(pool/10000), first ? 0 : ms); }   // pool_x100 -> credits, 3 decimals
+    if (totalBet != null && totalBet !== bet){ bet = totalBet; odoSet($("#jpWow"), fmt(E.JP.WOW_MAXBET_MULT*bet), 0); odoSet($("#jpMini"), fmt(E.JP.MINI_MAXBET_MULT*bet), 0); }
   }
   async function hit(kind){ const b = $(`#jp${kind[0] + kind.slice(1).toLowerCase()}Box`); if (!b) return; b.classList.remove("hit"); void b.offsetWidth; b.classList.add("hit"); setTimeout(() => b.classList.remove("hit"), 3000); }
   return { show, hit, get pool(){ return pool; } };
@@ -1732,7 +1774,7 @@ const Slots = (() => {
   const setDis = (el, v) => { if (el.disabled !== v) el.disabled = v; };
   function renderBet(){
     if (betIdx > maxIdx()) betIdx = maxIdx();
-    setText($("#betTotal"), fmt(totalBet())); Jackpots.show(null, totalBet());
+    setText($("#betTotal"), fmt(totalBet())); Jackpots.show(null, maxTotalBet());
     const fs = Backend.fs.left > 0, lock = spinning || presenting || autoActive || fs;
     setDis($("#betDown"), lock || betIdx <= 0); setDis($("#betUp"), lock); setDis($("#maxBet"), lock || betIdx === maxIdx());
     if ($("#game").classList.contains("fs") !== fs){ $("#game").classList.toggle("fs", fs); requestAnimationFrame(() => size()); }
@@ -1872,6 +1914,7 @@ const Slots = (() => {
   }
   async function present(resp){
     const res = resp.result, tierName = E.tier(res.lineWin, res.totalBet);
+    if (res.free) await Aces.reveal(res.aces);   // new aces land and lock
     if (res.lineWin > 0){
       showAllWins(res);
       const lbl = res.free ? "FREE SPIN WIN x2" : res.lines.some(l => l.wild) ? "WILD WIN!" : "WIN";
@@ -1883,13 +1926,9 @@ const Slots = (() => {
         amtEl.textContent = fmt(res.lineWin);
       }
     } else setWinbar(Backend.fs.left > 0 ? `${Backend.fs.left} FREE SPINS LEFT` : "SPIN AGAIN", null, false);
-    if (res.jackpot){
-      const jk = res.jackpot.kind; Jackpots.hit(jk); Sfx.jackpot();
-      await overlay({MEGA:"epic", WOW:"mega", MINI:"big"}[jk], `${jk} JACKPOT`, res.jackpot.amount, jk === "MEGA" ? "The progressive pool is yours!" : `${jk === "WOW" ? E.JP.WOW_MULT : E.JP.MINI_MULT}\u00d7 your bet`, autoActive ? 4000 : 7000);
-      setWinbar("TOTAL WIN", res.totalWin, true);
-    }
-    if (resp.jackpotPool != null) Jackpots.show(Number(resp.jackpotPool), null, res.jackpot && res.jackpot.kind === "MEGA" ? 0 : 700);
-    balAdj = 0; App.syncBalance(res.totalWin > 0); App.renderXp(); renderBet();
+    const ace = res.aceAward || null;
+    if (resp.jackpotPool != null && !(ace && ace.tier === "MEGA")) Jackpots.show(Number(resp.jackpotPool), null, 700);
+    balAdj = ace ? -ace.amount : 0; App.syncBalance(res.totalWin > 0); App.renderXp(); renderBet();   // ace jackpot revealed at round end
     if (resp.levelUp){
       const lu = resp.levelUp; Sfx.kaching(); burstAt($("#lvlBadge"), 26);
       const unlocked = E.BET_UNLOCK.map((need, i) => need > lu.from && need <= lu.to ? i : -1).filter(i => i >= 0);
@@ -1903,8 +1942,14 @@ const Slots = (() => {
       Sign.set(res.sign.after); size(); renderBet();
     }
     if (res.free && Backend.fs.left === 0){
-      await overlay(E.tier(Backend.fs.total || resp.fs.total, res.totalBet) || "big", "FEATURE COMPLETE", resp.fs.total, `${fmt(resp.fs.total)} credits from free spins`, autoActive ? 3000 : 5000);
-      renderBet(); size();
+      await overlay(E.tier(Backend.fs.total || resp.fs.total, res.totalBet) || "big", "FEATURE COMPLETE", resp.fs.total, `${fmt(resp.fs.total)} credits from free spins \u00b7 ${E.popcount(res.aces.after)} ACES`, autoActive ? 3000 : 5000);
+      if (ace){
+        Jackpots.hit(ace.tier); Sfx.jackpot();
+        await overlay({MEGA:"epic", WOW:"mega", MINI:"big"}[ace.tier], `${ace.tier} JACKPOT`, ace.amount, `${ace.count} ACES OF SPADES LOCKED`, autoActive ? 4000 : 7000);
+        balAdj = 0; App.syncBalance(true); setWinbar(`${ace.tier} JACKPOT`, ace.amount, true);
+        if (resp.jackpotPool != null) Jackpots.show(Number(resp.jackpotPool), null, 0);
+      }
+      Aces.set(0); renderBet(); size();
     }
     if (res.totalWin > 0) cycleWins(res);
   }
@@ -1941,6 +1986,7 @@ const Slots = (() => {
       `<div class="ptrow"><svg viewBox="0 0 100 100"><use href="#s-W"/></svg><div><span>WILD</span><br>subs for every suit<br><span>reels 2-4 \u00b7 x2</span></div></div>`;
     $("#ptRules").innerHTML = `<b>${E.LINES} fixed lines</b> pay 3 or 4 of a kind left to right from the first reel; gold suits pay more. <b>WILD</b> appears on reels 2&ndash;4 and doubles any line it completes.
       <b>SUIT SIGN:</b> any win with a suit lights that suit and it stays lit. Light all 4 for <b>${E.SIGN_FREE_SPINS} FREE SPINS</b> with all wins <b>&times;${E.FS_MULTIPLIER}</b>, then the sign resets (retriggers up to ${E.MAX_FREE_SPINS}).
+      <b>ACE OF SPADES</b> appears only in free spins and LOCKS in its cell for the rest of the round. At the end of the round locked aces pay the highest jackpot reached: <b>6+ MINI</b> (2&times; your max bet), <b>9+ WOW</b> (3&times; max bet), <b>all 12 MEGA</b> (the progressive pool: starts at ${fmt(E.JP.MEGA_SEED)} and grows by 1% of every bet).
       Every credit bet earns XP; level-ups pay bonus credits and unlock bigger bets.`;
     $("#ptLines").innerHTML = E.PAYLINES.map((pl, i) => `<div class="ln"><i>${[0,1,2].map(row => pl.map(r => `<b class="${r === row ? "on" : ""}"></b>`).join("")).join("")}</i>${i + 1}</div>`).join("");
   }
@@ -2041,7 +2087,7 @@ window.__slots = { spin, setMode, randInt, slot:Slots, engine:E,
   $("#authDemoNote").textContent = Backend.kind === "demo" ? "Demo mode: no real accounts. This makes a pretend player stored only in this browser." : "We only use your name and email to keep your credit balance.";
   syncMute(); updateNameCount(false); Bg.reset(); renderHistory();
   try { await Backend.init(); } catch(e){ console.warn("backend init failed", e); }
-  App.refresh(false); Sign.set(Backend.sign); Jackpots.show(Backend.jackpotPool, Slots.totalBet()); Slots.size(true);
+  App.refresh(false); Sign.set(Backend.sign); Aces.set(Backend.fs.left > 0 ? Backend.fs.locked | 0 : 0); Jackpots.show(Backend.jackpotPool, maxTotalBet()); Slots.size(true);
   // live mode: the global MEGA pool grows from everyone's bets; refresh it now and then while visible and idle
   if (Backend.kind === "live") setInterval(async () => { if (document.hidden || Slots.busy()) return; const before = Backend.jackpotPool; await Backend.loadJackpot(); if (Backend.jackpotPool !== before && Backend.jackpotPool > (Jackpots.pool || 0)) Jackpots.show(Backend.jackpotPool, null, 1200); }, 20000);
   // Landscape menu
