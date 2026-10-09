@@ -715,7 +715,7 @@ Player 6</textarea>
   <filter id="mb5"><feGaussianBlur stdDeviation="0 12"/></filter>
 </svg>
 
-<script src="config.js?v=202610090131"></script>
+<script src="config.js?v=202610090133"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -1054,7 +1054,7 @@ const SlotEngine = (() => {
   // ACE OF SPADES lock feature (free spins only). Each unlocked cell independently turns into an ace with chance
   // ACE_CUT/ACE_ROLL per free spin; an ace LOCKS in its cell for the rest of the round (12-bit mask, bit = reel*3+row).
   // Jackpots are won ONLY by locked aces, paid at the end of the round, highest tier only:
-  //   6+ = MINI (2x the player's max total bet), 9+ = WOW (3x max total bet), 12 = MEGA (progressive pool).
+  //   6+ = MINI (2x the total bet that started the round), 9+ = WOW (3x that bet), 12 = MEGA (progressive pool).
   // MEGA pool: seed 10x the top total bet; every paid bet adds 1% (pool kept in 1/100 units: pool_x100 += totalBet).
   const ACE_ROLL = 10000, ACE_CUT = 275, CELLS = 12, ACE_FULL = 4095;
   const JP = { MINI_ACES: 6, WOW_ACES: 9, MEGA_ACES: 12, MINI_MAXBET_MULT: 2, WOW_MAXBET_MULT: 3, MEGA_SEED: 0, MEGA_RATE: 0.01 };
@@ -1125,9 +1125,9 @@ const SlotEngine = (() => {
              fsAward, totalWin: lineWin, lineBet, totalBet, free, multiplier: mult };
   }
   function popcount(m){ let n = 0; for (; m; m &= m - 1) n++; return n; }
-  /** End-of-round ace award (highest tier only). MEGA amount = the pool, supplied by the backend. */
-  function aceAward(count, level, megaPool){
-    const maxTotal = BET_STEPS[maxBetIndex(level)] * LINES;
+  /** End-of-round ace award (highest tier only). roundTotalBet = total bet that started the free-spin round; MEGA amount = the pool. */
+  function aceAward(count, roundTotalBet, megaPool){
+    const maxTotal = roundTotalBet;
     if (count >= JP.MEGA_ACES) return {tier: "MEGA", count, amount: megaPool};
     if (count >= JP.WOW_ACES)  return {tier: "WOW",  count, amount: JP.WOW_MAXBET_MULT * maxTotal};
     if (count >= JP.MINI_ACES) return {tier: "MINI", count, amount: JP.MINI_MAXBET_MULT * maxTotal};
@@ -1273,7 +1273,7 @@ function applySlotSpin(st, betIndex, rng){
     st.fs.left--; st.fs.total += r.totalWin; st.fs.locked = r.aces.after;
     if (r.fsAward){ const add = Math.min(r.fsAward, E.MAX_FREE_SPINS - st.fs.awarded); st.fs.left += add; st.fs.awarded += add; r.fsAdded = add; }
     if (st.fs.left === 0){   // round over: locked aces pay the highest jackpot tier reached, then the locks clear
-      const a = E.aceAward(r.aces.count, st.level, Math.floor(st.jp/100));
+      const a = E.aceAward(r.aces.count, st.fs.lineBet*E.LINES, Math.floor(st.jp/100));   // round's starting bet
       if (a){ r.aceAward = a; r.totalWin += a.amount; st.balance += a.amount; if (a.tier === "MEGA") st.jp = E.JP.MEGA_SEED*100; }
       st.fs.locked = 0;
     }
@@ -1713,9 +1713,8 @@ const Sign = (() => {
   }
   return { set, reveal };
 })();
-/* Jackpot panel: MEGA = progressive pool (rolls up as bets feed it), WOW / MINI = fixed 3x / 2x the player's MAX total bet. */
+/* Jackpot panel: MEGA = progressive pool (rolls up as bets feed it), WOW / MINI = 3x / 2x the selected total bet (the round's bet during free spins). */
 const FMT3 = new Intl.NumberFormat("en-US", {minimumFractionDigits:3, maximumFractionDigits:3});
-const maxTotalBet = () => E.BET_STEPS[E.maxBetIndex(Backend.level)]*E.LINES;
 /* Ace of Spades locks (free spins only): an overlay cell per reel cell; locked aces glow and stay put while the reels spin under them. */
 const Aces = (() => {
   const layer = document.createElement("div"); layer.className = "aceLayer"; layer.setAttribute("aria-hidden", "true");
@@ -1774,7 +1773,7 @@ const Slots = (() => {
   const setDis = (el, v) => { if (el.disabled !== v) el.disabled = v; };
   function renderBet(){
     if (betIdx > maxIdx()) betIdx = maxIdx();
-    setText($("#betTotal"), fmt(totalBet())); Jackpots.show(null, maxTotalBet());
+    setText($("#betTotal"), fmt(totalBet())); Jackpots.show(null, totalBet());
     const fs = Backend.fs.left > 0, lock = spinning || presenting || autoActive || fs;
     setDis($("#betDown"), lock || betIdx <= 0); setDis($("#betUp"), lock); setDis($("#maxBet"), lock || betIdx === maxIdx());
     if ($("#game").classList.contains("fs") !== fs){ $("#game").classList.toggle("fs", fs); requestAnimationFrame(() => size()); }
@@ -1986,7 +1985,7 @@ const Slots = (() => {
       `<div class="ptrow"><svg viewBox="0 0 100 100"><use href="#s-W"/></svg><div><span>WILD</span><br>subs for every suit<br><span>reels 2-4 \u00b7 x2</span></div></div>`;
     $("#ptRules").innerHTML = `<b>${E.LINES} fixed lines</b> pay 3 or 4 of a kind left to right from the first reel; gold suits pay more. <b>WILD</b> appears on reels 2&ndash;4 and doubles any line it completes.
       <b>SUIT SIGN:</b> any win with a suit lights that suit and it stays lit. Light all 4 for <b>${E.SIGN_FREE_SPINS} FREE SPINS</b> with all wins <b>&times;${E.FS_MULTIPLIER}</b>, then the sign resets (retriggers up to ${E.MAX_FREE_SPINS}).
-      <b>ACE OF SPADES</b> appears only in free spins and LOCKS in its cell for the rest of the round. At the end of the round locked aces pay the highest jackpot reached: <b>6+ MINI</b> (2&times; your max bet), <b>9+ WOW</b> (3&times; max bet), <b>all 12 MEGA</b> (the progressive pool: starts at ${fmt(E.JP.MEGA_SEED)} and grows by 1% of every bet).
+      <b>ACE OF SPADES</b> appears only in free spins and LOCKS in its cell for the rest of the round. At the end of the round locked aces pay the highest jackpot reached: <b>6+ MINI</b> (2&times; the bet that started the round), <b>9+ WOW</b> (3&times; that bet), <b>all 12 MEGA</b> (the progressive pool: starts at ${fmt(E.JP.MEGA_SEED)} and grows by 1% of every bet).
       Every credit bet earns XP; level-ups pay bonus credits and unlock bigger bets.`;
     $("#ptLines").innerHTML = E.PAYLINES.map((pl, i) => `<div class="ln"><i>${[0,1,2].map(row => pl.map(r => `<b class="${r === row ? "on" : ""}"></b>`).join("")).join("")}</i>${i + 1}</div>`).join("");
   }
@@ -2087,7 +2086,7 @@ window.__slots = { spin, setMode, randInt, slot:Slots, engine:E,
   $("#authDemoNote").textContent = Backend.kind === "demo" ? "Demo mode: no real accounts. This makes a pretend player stored only in this browser." : "We only use your name and email to keep your credit balance.";
   syncMute(); updateNameCount(false); Bg.reset(); renderHistory();
   try { await Backend.init(); } catch(e){ console.warn("backend init failed", e); }
-  App.refresh(false); Sign.set(Backend.sign); Aces.set(Backend.fs.left > 0 ? Backend.fs.locked | 0 : 0); Jackpots.show(Backend.jackpotPool, maxTotalBet()); Slots.size(true);
+  App.refresh(false); Sign.set(Backend.sign); Aces.set(Backend.fs.left > 0 ? Backend.fs.locked | 0 : 0); Jackpots.show(Backend.jackpotPool, Slots.totalBet()); Slots.size(true);
   // live mode: the global MEGA pool grows from everyone's bets; refresh it now and then while visible and idle
   if (Backend.kind === "live") setInterval(async () => { if (document.hidden || Slots.busy()) return; const before = Backend.jackpotPool; await Backend.loadJackpot(); if (Backend.jackpotPool !== before && Backend.jackpotPool > (Jackpots.pool || 0)) Jackpots.show(Backend.jackpotPool, null, 1200); }, 20000);
   // Landscape menu
